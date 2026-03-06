@@ -1,0 +1,36 @@
+body {
+  font-family: Arial, sans-serif; /* Zmienia czcionkę na czytelniejszą (bezszeryfową) na całej stronie */
+  background: #ffffff; /* Ustawia tło strony na biały kolor */
+  background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%); /* Dodaje delikatny gradient tła, który przechodzi od jasnoniebieskiego do białego, co sprawia, że strona wygląda bardziej nowocześnie i estetycznie */
+  background-attachment: fixed; /* Sprawia, że tło pozostaje nieruchome podczas przewijania strony, co dodaje efekt głębi i estetyki */
+  margin: 0; /* Usuwa domyślne marginesy, aby strona zajmowała całe okno przeglądarki bez niepotrzebnych odstępów */
+  border-radius: 20px; /* Dodaje delikatne zaokrąglenie krawędzi strony, co sprawia, że wygląda bardziej nowocześnie i estetycznie */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Dodaje subtelny cień do strony, co nadaje jej głębi i sprawia, że wygląda bardziej atrakcyjnie wizualnie */
+  padding: 40px;
+}
+
+main {
+  max-width: 700px;             /* Ogranicza szerokość głównego kontenera do 600 pikseli */
+  min-height: 50px;             /* Ogranicza wysokość głównego kontenera do wysokości okna przeglądarki */
+  margin: auto;                 /* Środkuje kontener w poziomie (równe odstępy po lewej i prawej) */
+  text-align: center;  
+  color: #000000;        
+  justify-content: flex-start; /* Wyrównuje tekst, pola i przyciski do środka wewnątrz kontenera */
+  min-height: 100vh;            /* Ustawia minimalną wysokość kontenera na 100% wysokości widoku, co sprawia, że zajmuje całe okno przeglądarki */
+  gap: 20px;                     /* Dodaje odstęp między elementami wewnątrz kontenera (np. między tekstem, polem i przyciskiem) */
+display: flex;
+flex-direction: column;
+padding-top: 20vh; /* Dodaje górny padding, aby przesunąć zawartość w dół, co sprawia, że jest bardziej widoczna i estetyczna */
+
+}
+
+input {
+  padding: 20px;                 /* Dodaje „powietrze” wewnątrz pola tekstowego (pogrubia je) */
+  width: 80%;   
+  color: #000000;                 /* Rozciąga pole tekstowe na 80% szerokości kontenera <main> */
+}
+
+button {
+  padding: 10px 20px;            /* Powiększa przycisk (10px góra/dół, 20px lewo/prawo) */
+  margin-top: 10px;              /* Robi odstęp od góry, żeby przycisk nie „kleił się” do pola wpisywania */
+}
