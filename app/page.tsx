@@ -1,7 +1,8 @@
 export default function Home() {        // główny komponent strony
   return (
     <main>                             {/* główny kontener strony */}
-      <h1>Co masz wwww lodówce</h1>       {/* tytuł strony */}
+      <h1>Co masz www lodówce</h1> 
+      <h2> test</h2>      {/* tytuł strony */}
 
       <input 
         type="text"                     // pole tekstowe
