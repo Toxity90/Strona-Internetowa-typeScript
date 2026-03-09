@@ -2,7 +2,7 @@
 
 import { useState } from "react" //Wyciągasz z biblioteki React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
-import { getRecipesByIngredient, Recipe } from '../data/recipes'; // Pobieramy bazę przepisów z nowego folderu
+import { getRecipesByIngredient, Recipe } from './data/recipes'; // Tylko JEDNA kropka na początku!
 
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
 
