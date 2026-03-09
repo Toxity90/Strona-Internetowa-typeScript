@@ -1,14 +1,12 @@
-export default function Home() {        // główny komponent strony
-  return (
-    <main>                             {/* główny kontener strony */}
-      <h1>Co masz w lodówce</h1> 
+import Search from "@/components/Search"; // 1. IMPORTUJESZ SWÓJ KOMPONENT z pliku search
 
-      <input 
-        type="text"                     // pole tekstowe
-        placeholder="np. jajka, ser"   // tekst podpowiedzi
-      />
+export default function Home() { // Tworzysz główną funkcję (komponent) dla swojej strony. export pozwala użyć go w innych częściach strony, ale tu jest to główny komponent, więc będzie wyświetlany jako strona główna.
+  return ( // To jest JSX, czyli specjalny język, który pozwala Ci pisać kod interfejsu użytkownika w JavaScript. Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
+    <main>
+      <h1>Co masz w lodówce 🍎</h1> 
 
-      <button>Znajdź przepis</button>   {/* przycisk */}
+      <Search /> 
+      
     </main>
   );
 }
