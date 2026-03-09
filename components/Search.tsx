@@ -2,6 +2,8 @@
 
 import { useState } from "react" //Wyciągasz z biblioteki React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
+import { getRecipesByIngredient, Recipe } from '../data/recipes'; // Pobieramy bazę przepisów z nowego folderu
+
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
 
   const [ingredient, setIngredient] = useState("") 
@@ -9,6 +11,8 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
   // useState to „inteligentna szufladka”, która pozwala Reactowi zapamiętać wpisane dane i automatycznie odświeżyć to, co widzisz na ekranie, gdy ich zawartość się zmieni.
   // "" oznacza że początkowo pole jest puste
   const [ingredientsList, setIngredientsList] = useState<string[]>([]) //// Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
+
+const [foundRecipes, setFoundRecipes] = useState<Recipe[]>([]); // Tworzymy miejsce na znalezione przepisy
 
   const handleAdd = () => { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję". Mówisz komputerowi: "Gdy wywołam handleAdd, wykonaj wszystkie kroki wewnątrz tych nawiasów {}
  if  (ingredient.trim() !== ""){ //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
@@ -39,6 +43,15 @@ onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku
 style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
 >
   Dodaj składnik
+  <div style={{ marginTop: '20px' }}>
+  {/* Pętla, która bierze znalezione przepisy i robi z nich małe kafelki na ekranie */}
+  {foundRecipes.map(recipe => (
+    <div key={recipe.id} style={{ padding: '10px', border: '1px solid blue', borderRadius: '10px' }}>
+      <h3>{recipe.title}</h3> {/* Wyświetla nazwę dania */}
+      <img src={recipe.image} alt={recipe.title} width="150" /> {/* Wyświetla zdjęcie */}
+    </div>
+  ))}
+</div>
 </button>
 
   </div> {/* zamknięcie kontenera i koniec funckji */}
