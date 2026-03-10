@@ -1,8 +1,8 @@
 "use client" // Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
 
-import { useState } from "react" //Wyciągasz z biblioteki React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
+import { useState } from "react" //Wyciągasz z bibliotekę React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
-import { getRecipesByIngredient, Recipe } from './data/recipes'; // Tylko JEDNA kropka na początku!
+import { getRecipesByIngredient, Recipe } from './data/recipes'; // Importujesz funkcję, która potrafi znaleźć przepisy na podstawie składników, oraz typ danych "Recipe", który opisuje jak wygląda przepis (np. ma tytuł, zdjęcie, itd.). Ten import jest potrzebny do późniejszego wyszukiwania przepisów.
 
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
 
@@ -14,12 +14,31 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
 
 const [foundRecipes, setFoundRecipes] = useState<Recipe[]>([]); // Tworzymy miejsce na znalezione przepisy
 
+// --- NOWE RZECZY DLA AI ---
+const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
+const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
+
   const handleAdd = () => { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję". Mówisz komputerowi: "Gdy wywołam handleAdd, wykonaj wszystkie kroki wewnątrz tych nawiasów {}
  if  (ingredient.trim() !== ""){ //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
 setIngredientsList([...ingredientsList, ingredient.trim()])
 setIngredient("")
  }
   };
+
+// --- NOWA FUNKCJA DO GADANIA Z AI ---
+const handleGenerateAI = async () => { // NOWE: Funkcja wysyłająca Twoją listę do pliku route.ts
+  if (ingredientsList.length === 0) return alert("Dodaj składniki!"); // Nie wysyłaj, jeśli lista jest pusta
+  setIsLoading(true); // Włączamy ładowanie
+  try {
+    const response = await fetch("/api/chat", { // Łączymy się z Twoim API
+      method: "POST", // Wysyłamy dane
+      body: JSON.stringify({ ingredients: ingredientsList }), // Pakujemy listę składników
+    });
+    const data = await response.json(); // Czekamy na odpowiedź
+    if (data.success) setAiRecipe(data.recipe); // Jeśli sukces, zapisujemy przepis
+  } catch (e) { console.error(e); } // Jeśli błąd, wypisz w konsoli
+  setIsLoading(false); // Wyłączamy ładowanie
+};
 
   return ( // zwracany JSX czyli kod interfejsu, Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
 
@@ -43,15 +62,6 @@ onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku
 style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
 >
   Dodaj składnik
-  <div style={{ marginTop: '20px' }}>
-  {/* Pętla, która bierze znalezione przepisy i robi z nich małe kafelki na ekranie */}
-  {foundRecipes.map(recipe => (
-    <div key={recipe.id} style={{ padding: '10px', border: '1px solid blue', borderRadius: '10px' }}>
-      <h3>{recipe.title}</h3> {/* Wyświetla nazwę dania */}
-      <img src={recipe.image} alt={recipe.title} width="150" /> {/* Wyświetla zdjęcie */}
-    </div>
-  ))}
-</div>
 </button>
 
   </div> {/* zamknięcie kontenera i koniec funckji */}
@@ -72,8 +82,33 @@ style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', co
 
     {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} {/* To jest warunkowe renderowanie. Jeśli lista jest pusta, pokaż ten tekst. */}
   </div>
+
+  {/* --- NOWY PRZYCISK AI POD LISTĄ --- */}
+  <button 
+    onClick={handleGenerateAI} // Funkcja, która wyśle składniki do AI i poczeka na przepis
+    style={{ width: '100%', padding: '10px', marginTop: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+  >
+    {isLoading ? "AI myśli..." : "Generuj przepis przez AI"} {/* Zmienia tekst podczas ładowania */}
+  </button>
+
+  {/* --- NOWA SEKCJA WYŚWIETLANIA PRZEPISU --- */}
+  {aiRecipe && ( // NOWE: Pokazuje ten blok tylko jeśli AI zwróciło przepis
+    <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '10px', border: '1px solid #ccc' }}>
+      <h3 style={{ color: '#28a745' }}>Przepis AI:</h3>
+      <p style={{ whiteSpace: 'pre-wrap' }}>{aiRecipe}</p> {/* pre-wrap zachowuje entery w tekście */}
+    </div>
+  )}
+
+  <div style={{ marginTop: '20px' }}>
+  {/* Pętla, która bierze znalezione przepisy i robi z nich małe kafelki na ekranie */}
+  {foundRecipes.map(recipe => (
+    <div key={recipe.id} style={{ padding: '10px', border: '1px solid blue', borderRadius: '10px' }}>
+      <h3>{recipe.title}</h3> {/* Wyświetla nazwę dania */}
+      <img src={recipe.image} alt={recipe.title} width="150" /> {/* Wyświetla zdjęcie */}
+    </div>
+  ))}
   </div>
 
-
+  </div>
   )
 }
