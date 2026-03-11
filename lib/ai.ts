@@ -11,7 +11,7 @@ export async function generateRecipes(ingredients: string[]) {
   const response = await openai.responses.create({
     model: "gpt-4o-mini", 
     // Przekazujemy instrukcję dla AI jako 'input' (w Responses API to główny punkt wejścia)
-    input: `Jesteś kucharzem zero-waste. Mam: ${ingredients.join(", ")}. Wygeneruj kilka przepisów z polami 'nazwa przepisu', 'składniki', 'czas przygotowania', 'instrukcje przygotowania krok po kroku' WAŻNE: Jak jest lista składników to gdy podajesz jednostki np. gramy to w nawiasie pisz to samo tylko że w szklankach lub łyżkach.`,
+    input: `Jesteś kucharzem zero-waste. Mam: ${ingredients.join(", ")}. Wygeneruj kilka przepisów z polami 'nazwa przepisu', 'składniki', 'czas przygotowania', 'instrukcje przygotowania krok po kroku' WAŻNE: Jak jest lista składników to gdy podajesz jednostki np. gramy to w nawiasie pisz to samo tylko że w szklankach lub łyżkach.Odpowiadaj w formacie Markdown.Używaj - dla nagłówków sekcji(njp.Składniki, Instrukcje przygotowania) i 1. 2. 3. dla kroków instrukcji przygotowania. Bez komentarzy, rób pogrubienia dla ważnych rzeczy i list punktowych dla składników.`,
     // Opcjonalnie: formatowanie pod agentów (Responses API świetnie radzi sobie z JSONem)
   });
 
