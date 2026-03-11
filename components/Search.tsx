@@ -52,6 +52,11 @@ const handleGenerateAI = async () => { // NOWE: Funkcja wysyłająca Twoją list
         type="text" // typ pola - tekst
         placeholder="Wpisz składnik" // tekst podpowiedzi w polu
         value={ingredient} // wartość pola jest powiązana ze stanem "ingredient"
+        onKeyDown={(e) =>{ // funkcja uruchamiana gdy użytkownik naciśnie klawisz}
+          if (e.key === "Enter") { // sprawdza czy to był klawisz Enter
+            handleAdd(); // Jeśli naciśnie Enter, wywołaj funkcję dodawania składnika
+          }
+        }}
         onChange={(e) => setIngredient(e.target.value)} 
         // funkcja uruchamiana gdy użytkownik coś wpisze
         // gdy użytkownik naciśnie klawisz, bierze nową literkę (e.target.value) i natychmiast wrzuca ją do szufladki przez setIngredient.
@@ -70,15 +75,51 @@ style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', co
     <h3>Twoje składniki:</h3>
     <ul style={{ listStyleType: 'none', padding: 0 }}> {/* ul to znacznik listy punktowej */}
     
-    {ingredientsList.map((item, index) => ( // map to metoda, która bierze każdy element z ingredientsList i tworzy z niego coś nowego. W tym przypadku, dla każdego składnika (item) tworzy element listy (li).}
-    <li
-    key={index} // klucz to specjalna rzecz, która pomaga Reactowi śledzić elementy listy. Tutaj używamy indexu, ale w prawdziwej aplikacji lepiej byłoby mieć unikalne ID dla każdego składnika.
-    style={{ background: '#f9f9f9', padding: '10px', marginBottom: '5px', borderRadius: '5px', borderLeft: '5px solid #28a745'}}
+    {/* map to metoda, która bierze każdy element z ingredientsList i tworzy z niego coś nowego. */}
+  {ingredientsList.map((item, index) => (
+    <li 
+      key={index} // klucz to specjalna rzecz, która pomaga Reactowi śledzić elementy listy.
+      style={{ 
+        display: 'flex',              // Włącza elastyczny układ (pozwala ustawić elementy obok siebie)
+        flexDirection: 'row',         // Wymusza, by tekst i przycisk były w jednej linii (poziomo)
+        alignItems: 'center',         // Centruje tekst i przycisk pionowo względem siebie
+        justifyContent: 'space-between', // Wypycha tekst na lewo, a przycisk X maksymalnie na prawo
+        background: '#f9f9f9',        // Twoje tło ramki
+        padding: '10px',              // Odstęp wewnątrz ramki
+        marginBottom: '5px',          // Odstęp między ramkami składników
+        borderRadius: '5px',          // Zaokrąglenie rogów ramki
+        borderLeft: '5px solid #28a745', 
+        width: '100%',                // Sprawia, że ramka zajmuje całą dostępną szerokość
+        boxSizing: 'border-box'       // Pilnuje, by padding nie "rozpychał" ramki poza ekran
+      }}
     >
-      {item} {/* Tu wyświetla się nazwa składnika, np. "Jajka" */}
+      {/* <span> trzyma tekst składnika, flex: 1 sprawia, że zajmuje on całą wolną przestrzeń po lewej */}
+      <span style={{ flex: 1 }}>{item}</span>
+      
+      {/* Przycisk usuwania (X) */}
+      <button 
+        onClick={() => {
+          // filter tworzy nową listę, pomijając ten jeden konkretny element (po jego numerze index)
+          const nowaLista = ingredientsList.filter((_, i) => i !== index);
+          setIngredientsList(nowaLista); // Aktualizuje stan aplikacji nową, krótszą listą
+        }}
+        style={{ 
+          color: 'red',               // Kolor iksa
+          border: 'none',             // Usuwa domyślną ramkę przycisku
+          background: 'none',         // Usuwa tło przycisku
+          cursor: 'pointer',          // Zmienia kursor na "łapkę" po najechaniu
+          fontWeight: 'bold',         // Pogrubia iksa
+          fontSize: '18px',           // Wielkość iksa
+          marginLeft: '10px',         // Odstęp iksa od tekstu składnika
+          lineHeight: '1'             // Zapobiega sztucznemu zwiększaniu wysokości ramki przez przycisk
+        }}
+        title="Usuń ten składnik"      // Tekst, który pojawi się po najechaniu myszką
+      >
+        ✕
+      </button>
     </li>
-    ))}
-    </ul>
+  ))}
+</ul>
 
     {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} {/* To jest warunkowe renderowanie. Jeśli lista jest pusta, pokaż ten tekst. */}
   </div>
