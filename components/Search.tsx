@@ -1,10 +1,13 @@
 "use client" // Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
-
+import { Camera } from "lucide-react"; // Import ikonki aparatu
+import { useRef } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś między renderami. Tutaj użyjemy go do przechowywania odniesienia do elementu input, który jest niewidoczny, ale służy do wybierania zdjęć z telefonu.
 import { useState } from "react" //Wyciągasz z bibliotekę React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
 import { getRecipesByIngredient, Recipe } from './data/recipes'; // Importujesz funkcję, która potrafi znaleźć przepisy na podstawie składników, oraz typ danych "Recipe", który opisuje jak wygląda przepis (np. ma tytuł, zdjęcie, itd.). Ten import jest potrzebny do późniejszego wyszukiwania przepisów.
 
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
+
+const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obsługi aparatu, który pozwoli Ci otworzyć menu wyboru zdjęcia, gdy użytkownik kliknie ikonę aparatu. useRef(null) oznacza, że na początku nie ma żadnego elementu przypisanego do tego pilota.
 
   const [ingredient, setIngredient] = useState("") 
  //Tworzysz zmienną ingredient (tu trafia tekst) i funkcję setIngredient (narzędzie do zmiany tego tekstu).
@@ -18,6 +21,41 @@ const [foundRecipes, setFoundRecipes] = useState<Recipe[]>([]); // Tworzymy miej
 const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
 const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
 
+const handleCameraClick = () => {
+  fileInputRef.current?.click(); // Po kliknięciu w ikonkę, "klika" w ukryty aparat. File inputt onazwa zmiennej pudełka którą wczesniej stworzyliśmy. current to sposób na dostęp do tego, co jest w środku pudełka. ?. to taki bezpiecznik, który mówi: "jeśli jest coś w środku, kliknij, ale jeśli nie ma, to nie rób nic i nie pokazuj błędu".
+};
+
+const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0]; //  Wyciągamy plik zdjęcia
+  if (!file) return; // Jeśli użytkownik nie wybrał zdjęcia, to nic nie rób (zwróć pustkę i zakończ funkcję)
+
+  setIsLoading(true); //  Włączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że coś się dzieje
+
+  try {
+    //  Zamieniamy zdjęcie na format, który rozumie internet (FormData)
+    const formData = new FormData(); // Tworzymy "paczka danych", która potrafi przechować plik zdjęcia i wysłać go do serwera
+    formData.append("file", file); // Dodajemy zdjęcie do tego "paczka danych", którą wyślemy do serwera
+
+    // WYSYŁAMY zdjęcie do Twojego API (musimy zaraz stworzyć ten endpoint)
+    const response = await fetch("/api/vision", {
+      method: "POST", // Wysyłamy dane
+      body: formData, // Pakujemy zdjęcie w formę, którą serwer potrafi odczytać
+    });
+
+    const data = await response.json(); // Czekamy na odpowiedź z serwera i zamieniamy ją z formatu internetowego na coś, co możemy używać w JavaScript (JSON)
+
+    if (data.ingredients) { //  Jeśli serwer odpowiedział, że rozpoznał składniki, to...
+      //  Jeśli AI rozpoznało składniki, dodajemy je do Twojej listy!
+      setIngredientsList([...ingredientsList, ...data.ingredients]);
+      alert("AI rozpoznało: " + data.ingredients.join(", "));
+    }
+  } catch (error) {
+    console.error("Błąd przy analizie zdjęcia:", error); // Jeśli coś poszło nie tak (np. zdjęcie było niewyraźne, albo serwer miał problem), pokaż alert z informacją o błędzie.
+    alert("Nie udało się odczytać zdjęcia.");
+  } finally { // Ten blok wykona się zawsze, niezależnie od tego, czy wszystko poszło dobrze, czy był błąd. To idealne miejsce, żeby wyłączyć kręciołek/napis "AI myśli", bo w obu przypadkach AI już skończyło swoją pracę.
+    setIsLoading(false); //  Wyłączamy ładowanie
+  }
+};
   const handleAdd = () => { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję". Mówisz komputerowi: "Gdy wywołam handleAdd, wykonaj wszystkie kroki wewnątrz tych nawiasów {}
  if  (ingredient.trim() !== ""){ //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
 setIngredientsList([...ingredientsList, ingredient.trim()])
@@ -47,6 +85,24 @@ const handleGenerateAI = async () => { // NOWE: Funkcja wysyłająca Twoją list
 
 <div style={{ display: 'flex', gap: '10px'}}>
 
+{/* --- UKRYTY APARAT --- */}
+<input 
+  type="file" 
+  accept="image/*" // pozwala wybrać tylko zdjęcia
+  capture="environment" // na telefonach otwiera od razu aparat, a nie galerię
+  ref={fileInputRef} // podłączamy ten input do naszego "pilota" (fileInputRef), żebyśmy mogli go otworzyć klikając w ikonę aparatu
+  onChange={handleFileChange} 
+  style={{ display: 'none' }} // Ukrywamy brzydki systemowy przycisk
+/>
+
+{/* --- PRZYCISK Z IKONKĄ --- */}
+<button 
+  type="button" // standardowy znacznik przycisku
+  onClick={handleCameraClick} // Po kliknięciu w ten przycisk, otworzy się menu wyboru zdjęcia (dzięki handleCameraClick)
+  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+>
+  <Camera size={28} color="#555" />
+</button>
 
       <input //To jest właśnie kod interfejsu (JSX). To, co tu napiszesz, użytkownik zobaczy jako pole do pisania.
         type="text" // typ pola - tekst
