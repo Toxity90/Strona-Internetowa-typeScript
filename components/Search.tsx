@@ -3,8 +3,6 @@ import { Camera } from "lucide-react"; // Import ikonki aparatu
 import { useRef } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś między renderami. Tutaj użyjemy go do przechowywania odniesienia do elementu input, który jest niewidoczny, ale służy do wybierania zdjęć z telefonu.
 import { useState } from "react" //Wyciągasz z bibliotekę React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
-import { getRecipesByIngredient, Recipe } from './data/recipes'; // Importujesz funkcję, która potrafi znaleźć przepisy na podstawie składników, oraz typ danych "Recipe", który opisuje jak wygląda przepis (np. ma tytuł, zdjęcie, itd.). Ten import jest potrzebny do późniejszego wyszukiwania przepisów.
-
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
 
 const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obsługi aparatu, który pozwoli Ci otworzyć menu wyboru zdjęcia, gdy użytkownik kliknie ikonę aparatu. useRef(null) oznacza, że na początku nie ma żadnego elementu przypisanego do tego pilota.
@@ -14,8 +12,6 @@ const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obs�
   // useState to „inteligentna szufladka”, która pozwala Reactowi zapamiętać wpisane dane i automatycznie odświeżyć to, co widzisz na ekranie, gdy ich zawartość się zmieni.
   // "" oznacza że początkowo pole jest puste
   const [ingredientsList, setIngredientsList] = useState<string[]>([]) //// Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
-
-const [foundRecipes, setFoundRecipes] = useState<Recipe[]>([]); // Tworzymy miejsce na znalezione przepisy
 
 // --- NOWE RZECZY DLA AI ---
 const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
@@ -126,7 +122,7 @@ style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', co
 </button>
 
   </div> {/* zamknięcie kontenera i koniec funckji */}
-
+  
   <div style={{ marginTop: '30px' }}>
     <h3>Twoje składniki:</h3>
     <ul style={{ listStyleType: 'none', padding: 0 }}> {/* ul to znacznik listy punktowej */}
@@ -176,7 +172,6 @@ style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', co
     </li>
   ))}
 </ul>
-
     {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} {/* To jest warunkowe renderowanie. Jeśli lista jest pusta, pokaż ten tekst. */}
   </div>
 
@@ -195,17 +190,6 @@ style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', co
       <p style={{ whiteSpace: 'pre-wrap' }}>{aiRecipe}</p> {/* pre-wrap zachowuje entery w tekście */}
     </div>
   )}
-
-  <div style={{ marginTop: '20px' }}>
-  {/* Pętla, która bierze znalezione przepisy i robi z nich małe kafelki na ekranie */}
-  {foundRecipes.map(recipe => (
-    <div key={recipe.id} style={{ padding: '10px', border: '1px solid blue', borderRadius: '10px' }}>
-      <h3>{recipe.title}</h3> {/* Wyświetla nazwę dania */}
-      <img src={recipe.image} alt={recipe.title} width="150" /> {/* Wyświetla zdjęcie */}
-    </div>
-  ))}
-  </div>
-
   </div>
   )
 }

@@ -1,12 +1,12 @@
 import OpenAI from "openai"; // Importujemy oficjalną bibliotekę OpenAI do obsługi modeli
 
 // Tworzymy nową instancję klienta OpenAI
-const openai = new OpenAI({
+const openai = new OpenAI({   // const openai to stała, która będzie przechowywać naszą instancję klienta OpenAI, new OpenAI() to sposób na stworzenie tej instancji, a w środku przekazujemy konfigurację, w tym nasz klucz API.
   apiKey: process.env.OPENAI_API_KEY // Pobieramy klucz API bezpiecznie z Twojego pliku .env
 });
 
 // Główna funkcja, którą wywołasz, by dostać przepisy
-export async function generateRecipes(ingredients: string[]) {
+export async function generateRecipes(ingredients: string[]) { //async function generateRecipes(ingredients: string[]) to funkcja, która jest asynchroniczna (bo będzie czekać na odpowiedź z OpenAI) i przyjmuje listę składników jako argument (ingredients: string[] oznacza, że spodziewamy się tablicy stringów).
   // Wywołujemy nowe Responses API (standard od 2025/2026)
   const response = await openai.responses.create({
     model: "gpt-4o-mini", 
