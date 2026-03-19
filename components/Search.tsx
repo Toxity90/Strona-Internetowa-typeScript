@@ -1,195 +1,187 @@
 "use client" // Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
 import { Camera } from "lucide-react"; // Import ikonki aparatu
-import { useRef } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś między renderami. Tutaj użyjemy go do przechowywania odniesienia do elementu input, który jest niewidoczny, ale służy do wybierania zdjęć z telefonu.
-import { useState } from "react" //Wyciągasz z bibliotekę React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
+import { useRef, useState } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś... useState to „inteligentna szufladka”...
+import ReactMarkdown from 'react-markdown'; // Import biblioteki do renderowania Markdown, jeśli chcesz wyświetlać przepisy w formacie Markdown
+export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki.
 
-export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
+  // --- TWOJE SZUFLADKI I PILOTY ---
+  const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obsługi aparatu, który pozwoli Ci otworzyć menu wyboru zdjęcia...
+  const [ingredient, setIngredient] = useState(""); //Tworzysz zmienną ingredient (tu trafia tekst) i funkcję setIngredient (narzędzie do zmiany tego tekstu).
+  const [ingredientsList, setIngredientsList] = useState<string[]>([]); // Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
+  const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
+  const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
 
-const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obsługi aparatu, który pozwoli Ci otworzyć menu wyboru zdjęcia, gdy użytkownik kliknie ikonę aparatu. useRef(null) oznacza, że na początku nie ma żadnego elementu przypisanego do tego pilota.
-
-  const [ingredient, setIngredient] = useState("") 
- //Tworzysz zmienną ingredient (tu trafia tekst) i funkcję setIngredient (narzędzie do zmiany tego tekstu).
-  // useState to „inteligentna szufladka”, która pozwala Reactowi zapamiętać wpisane dane i automatycznie odświeżyć to, co widzisz na ekranie, gdy ich zawartość się zmieni.
-  // "" oznacza że początkowo pole jest puste
-  const [ingredientsList, setIngredientsList] = useState<string[]>([]) //// Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
-
-// --- NOWE RZECZY DLA AI ---
-const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
-const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
-
-const handleCameraClick = () => {
-  fileInputRef.current?.click(); // Po kliknięciu w ikonkę, "klika" w ukryty aparat. File inputt onazwa zmiennej pudełka którą wczesniej stworzyliśmy. current to sposób na dostęp do tego, co jest w środku pudełka. ?. to taki bezpiecznik, który mówi: "jeśli jest coś w środku, kliknij, ale jeśli nie ma, to nie rób nic i nie pokazuj błędu".
-};
-
-const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0]; //  Wyciągamy plik zdjęcia
-  if (!file) return; // Jeśli użytkownik nie wybrał zdjęcia, to nic nie rób (zwróć pustkę i zakończ funkcję)
-
-  setIsLoading(true); //  Włączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że coś się dzieje
-
-  try {
-    //  Zamieniamy zdjęcie na format, który rozumie internet (FormData)
-    const formData = new FormData(); // Tworzymy "paczka danych", która potrafi przechować plik zdjęcia i wysłać go do serwera
-    formData.append("file", file); // Dodajemy zdjęcie do tego "paczka danych", którą wyślemy do serwera
-
-    // WYSYŁAMY zdjęcie do Twojego API (musimy zaraz stworzyć ten endpoint)
-    const response = await fetch("/api/vision", {
-      method: "POST", // Wysyłamy dane
-      body: formData, // Pakujemy zdjęcie w formę, którą serwer potrafi odczytać
-    });
-
-    const data = await response.json(); // Czekamy na odpowiedź z serwera i zamieniamy ją z formatu internetowego na coś, co możemy używać w JavaScript (JSON)
-
-    if (data.ingredients) { //  Jeśli serwer odpowiedział, że rozpoznał składniki, to...
-      //  Jeśli AI rozpoznało składniki, dodajemy je do Twojej listy!
-      setIngredientsList([...ingredientsList, ...data.ingredients]);
-      alert("AI rozpoznało: " + data.ingredients.join(", "));
+  // --- FUNKCJA DODAWANIA (Uproszczony zapis) ---
+  function handleAdd() { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję".
+    if (ingredient.trim() !== "") { //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
+      setIngredientsList([...ingredientsList, ingredient.trim()]); //Tworzy nową listę, która zawiera wszystko co było wcześniej (...ingredientsList) plus nowy składnik (ingredient.trim())
+      setIngredient(""); //Czyli po dodaniu składnika, czyści pole tekstowe, żebyś mógł wpisać kolejny składnik bez ręcznego kasowania.
     }
-  } catch (error) {
-    console.error("Błąd przy analizie zdjęcia:", error); // Jeśli coś poszło nie tak (np. zdjęcie było niewyraźne, albo serwer miał problem), pokaż alert z informacją o błędzie.
-    alert("Nie udało się odczytać zdjęcia.");
-  } finally { // Ten blok wykona się zawsze, niezależnie od tego, czy wszystko poszło dobrze, czy był błąd. To idealne miejsce, żeby wyłączyć kręciołek/napis "AI myśli", bo w obu przypadkach AI już skończyło swoją pracę.
-    setIsLoading(false); //  Wyłączamy ładowanie
   }
-};
-  const handleAdd = () => { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję". Mówisz komputerowi: "Gdy wywołam handleAdd, wykonaj wszystkie kroki wewnątrz tych nawiasów {}
- if  (ingredient.trim() !== ""){ //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
-setIngredientsList([...ingredientsList, ingredient.trim()])
-setIngredient("")
- }
+
+  // --- FUNKCJA USUWANIA (Nowa, łatwiejsza do zrozumienia) ---
+  function handleRemove(indexDoUsuniecia: number) {
+    // Tworzymy nową listę bez elementu o danym numerze
+    const nowaLista = ingredientsList.filter((_, i) => i !== indexDoUsuniecia);
+    setIngredientsList(nowaLista); // Aktualizuje stan aplikacji nową, krótszą listą
+  }
+
+  const handleCameraClick = () => {
+    fileInputRef.current?.click(); // Po kliknięciu w ikonkę, "klika" w ukryty aparat...
   };
 
-// --- NOWA FUNKCJA DO GADANIA Z AI ---
-const handleGenerateAI = async () => { // NOWE: Funkcja wysyłająca Twoją listę do pliku route.ts
-  if (ingredientsList.length === 0) return alert("Dodaj składniki!"); // Nie wysyłaj, jeśli lista jest pusta
-  setIsLoading(true); // Włączamy ładowanie
-  try {
-    const response = await fetch("/api/chat", { // Łączymy się z Twoim API
-      method: "POST", // Wysyłamy dane
-      body: JSON.stringify({ ingredients: ingredientsList }), // Pakujemy listę składników
-    });
-    const data = await response.json(); // Czekamy na odpowiedź
-    if (data.success) setAiRecipe(data.recipe); // Jeśli sukces, zapisujemy przepis
-  } catch (e) { console.error(e); } // Jeśli błąd, wypisz w konsoli
-  setIsLoading(false); // Wyłączamy ładowanie
-};
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) { // Ta funkcja jest wywoływana, kiedy użytkownik wybierze zdjęcie. event to informacja o tym, co się stało (w tym przypadku, jakie zdjęcie zostało wybrane).
+    const file = event.target.files?.[0]; //  Pobierasz pierwsze zdjęcie, które użytkownik wybrał (jeśli wybrał). event.target.files to lista wszystkich wybranych plików, a [0] to pierwszy z nich.
+    if (!file) return; // Jeśli użytkownik nie wybrał zdjęcia, to nic nie rób
+
+    setIsLoading(true); //  Włączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że coś się dzieje
+
+    try {
+      const formData = new FormData(); // Tworzymy "paczka danych", która potrafi przechować plik zdjęcia
+      formData.append("file", file); 
+
+      const response = await fetch("/api/vision", { // const response to "koperta", w której przyjdzie odpowiedź z serwera. fetch to narzędzie do wysyłania zapytań do serwera. Wysyłasz je na adres "/api/vision" (to jest Twój własny serwer, który musisz jeszcze stworzyć w folderze /pages/api/vision.ts) i mówisz, że to jest POST (czyli wysyłasz dane) i dołączasz swoją "paczka danych" z plikiem zdjęcia.
+        method: "POST", // Mówisz, że to jest POST (czyli wysyłasz dane)
+        body: formData, 
+      });
+
+      const data = await response.json(); // Czekamy na odpowiedź z serwera i zamieniamy na JSON
+
+      if (data.ingredients) { //  Jeśli serwer odpowiedział, że rozpoznał składniki, to...
+        setIngredientsList([...ingredientsList, ...data.ingredients]);
+        alert("AI rozpoznało: " + data.ingredients.join(", "));
+      }
+    } catch (error) { // Jeśli coś poszło nie tak (np. serwer nie odpowiedział, albo zdjęcie było złej jakości), to...
+      console.error("Błąd przy analizie zdjęcia:", error);
+      alert("Nie udało się odczytać zdjęcia.");
+    } finally {  // Bez względu na to, czy wszystko poszło dobrze, czy źle, zawsze wyłączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że proces się zakończył.
+      setIsLoading(false); //  Wyłączamy ładowanie
+    }
+  }
+
+  async function handleGenerateAI() { // NOWE: Funkcja wysyłająca Twoją listę do pliku route.ts
+    if (ingredientsList.length === 0) {
+      alert("Dodaj składniki!");
+      return;
+    }
+    
+    setIsLoading(true); // Włączamy ładowanie
+    try {
+      const response = await fetch("/api/chat", { // Wysyłamy zapytanie do naszego serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
+        method: "POST", 
+        body: JSON.stringify({ ingredients: ingredientsList }), // Wysyłamy listę składników jako JSON do serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
+      });
+      const data = await response.json(); 
+      if (data.success) {
+        setAiRecipe(data.recipe); // Jeśli sukces, zapisujemy przepis
+      }
+    } catch (e) { 
+      console.error(e); 
+    } finally {
+      setIsLoading(false); // Wyłączamy ładowanie
+    }
+  }
 
   return ( // zwracany JSX czyli kod interfejsu, Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
+    <div style={{ maxWidth: '400px', margin: '20px auto', fontFamily: 'sans-serif'}}> 
 
-    <div style={{ maxWidth: '400px', margin: '20px auto', fontFamily: 'sans-serif'}}> {/*Zwykły kontener (taki niewidzialny karton), który trzyma wszystko w kupie. To już jest JSX.*/}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        {/* --- UKRYTY APARAT --- */}
+        <input  // To jest pole do wybierania zdjęć, ale jest ukryte, bo chcemy używać własnego przycisku z ikonką. Ma kilka ważnych atrybutów:
+          type="file" // Mówisz, że to jest pole do wybierania plików
+          accept="image/*" // pozwala wybrać tylko zdjęcia
+          capture="environment" // na telefonach otwiera od razu aparat
+          ref={fileInputRef} // podłączamy ten input do naszego "pilota"
+          onChange={handleFileChange}  // Kiedy użytkownik wybierze zdjęcie, ta funkcja jest wywoływana i zajmuje się wysłaniem go do serwera
+          style={{ display: 'none' }} // Ukrywamy brzydki systemowy przycisk
+        />
 
+        {/* --- PRZYCISK Z IKONKĄ --- */}
+        <button 
+          type="button" 
+          onClick={handleCameraClick}  // Kiedy klikniesz ten przycisk, otworzy się menu wyboru zdjęcia (albo aparat na telefonie)
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          <Camera size={28} color="#555" /> 
+        </button>
 
-<div style={{ display: 'flex', gap: '10px'}}>
+        <input  // To jest pole tekstowe, gdzie wpisujesz składnik. Ma kilka ważnych atrybutów:
+          type="text" // Mówisz, że to jest pole tekstowe
+          placeholder="Wpisz składnik" // To jest tekst, który pokazuje się, gdy pole jest puste, żeby podpowiedzieć użytkownikowi co ma wpisać
+          value={ingredient} 
+          onChange={(e) => setIngredient(e.target.value)}  // Kiedy użytkownik coś wpisuje, ta funkcja jest wywoływana i aktualizuje stan ingredient, żeby zawsze mieć aktualny tekst z pola
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { handleAdd(); } // To pozwala dodać składnik do listy, kiedy naciśniesz Enter, zamiast klikać przycisk "Dodaj składnik"
+          }}
+          style={{ padding: '8px', flex: 1, borderRadius: '4px', border: '1px solid #ccc' }} 
+        />
+        
+        <button  // To jest przycisk, który dodaje wpisany składnik do listy. Ma kilka ważnych atrybutów:
+          onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku, która dodaje wpisany składnik do listy
+          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
+        >
+          Dodaj składnik
+        </button>
+      </div>  
+      <div style={{ marginTop: '30px' }}> 
+        <h3>Twoje składniki:</h3>
+        <ul style={{ listStyleType: 'none', padding: 0 }}> 
+          {ingredientsList.map((item, index) => ( // Przechodzimy przez każdy składnik w liście i wyświetlamy go razem z przyciskiem do usunięcia
+            <li key={index} style={{ // Każdy składnik jest wyświetlany w osobnym "pudełku" z przyciskiem do usunięcia
+              display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
+              background: '#f9f9f9', padding: '10px', marginBottom: '5px', borderRadius: '5px', 
+              borderLeft: '5px solid #28a745', width: '100%', boxSizing: 'border-box' 
+            }}>
+              <span style={{ flex: 1 }}>{item}</span> 
+              
+              <button 
+                onClick={() => handleRemove(index)}  // Funkcja handleRemove uruchamiana po kliknięciu przycisku, przekazując numer indeksu składnika do usunięcia
+                style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '18px' }}
+                title="Usuń ten składnik" // informacja po najechaniu myszką
+              >
+                ✕ 
+              </button>
+            </li>
+          ))}
+        </ul>
+        {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>}
+      </div>
 
-{/* --- UKRYTY APARAT --- */}
-<input 
-  type="file" 
-  accept="image/*" // pozwala wybrać tylko zdjęcia
-  capture="environment" // na telefonach otwiera od razu aparat, a nie galerię
-  ref={fileInputRef} // podłączamy ten input do naszego "pilota" (fileInputRef), żebyśmy mogli go otworzyć klikając w ikonę aparatu
-  onChange={handleFileChange} 
-  style={{ display: 'none' }} // Ukrywamy brzydki systemowy przycisk
-/>
-
-{/* --- PRZYCISK Z IKONKĄ --- */}
-<button 
-  type="button" // standardowy znacznik przycisku
-  onClick={handleCameraClick} // Po kliknięciu w ten przycisk, otworzy się menu wyboru zdjęcia (dzięki handleCameraClick)
-  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
->
-  <Camera size={28} color="#555" />
-</button>
-
-      <input //To jest właśnie kod interfejsu (JSX). To, co tu napiszesz, użytkownik zobaczy jako pole do pisania.
-        type="text" // typ pola - tekst
-        placeholder="Wpisz składnik" // tekst podpowiedzi w polu
-        value={ingredient} // wartość pola jest powiązana ze stanem "ingredient"
-        onKeyDown={(e) =>{ // funkcja uruchamiana gdy użytkownik naciśnie klawisz}
-          if (e.key === "Enter") { // sprawdza czy to był klawisz Enter
-            handleAdd(); // Jeśli naciśnie Enter, wywołaj funkcję dodawania składnika
-          }
-        }}
-        onChange={(e) => setIngredient(e.target.value)} 
-        // funkcja uruchamiana gdy użytkownik coś wpisze
-        // gdy użytkownik naciśnie klawisz, bierze nową literkę (e.target.value) i natychmiast wrzuca ją do szufladki przez setIngredient.
-        style={{ padding: '8px',flex: 1, borderRadius: '4px', border: '1px solid #ccc' }} 
-      />
-<button //Standardowy znacznik przycisku. Tekst pomiędzy nimi to to, co napisane jest na przycisku na ekranie.
-onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku
-style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
->
-  Dodaj składnik
-</button>
-
-  </div> {/* zamknięcie kontenera i koniec funckji */}
-  
-  <div style={{ marginTop: '30px' }}>
-    <h3>Twoje składniki:</h3>
-    <ul style={{ listStyleType: 'none', padding: 0 }}> {/* ul to znacznik listy punktowej */}
-    
-    {/* map to metoda, która bierze każdy element z ingredientsList i tworzy z niego coś nowego. */}
-  {ingredientsList.map((item, index) => (
-    <li 
-      key={index} // klucz to specjalna rzecz, która pomaga Reactowi śledzić elementy listy.
-      style={{ 
-        display: 'flex',              // Włącza elastyczny układ (pozwala ustawić elementy obok siebie)
-        flexDirection: 'row',         // Wymusza, by tekst i przycisk były w jednej linii (poziomo)
-        alignItems: 'center',         // Centruje tekst i przycisk pionowo względem siebie
-        justifyContent: 'space-between', // Wypycha tekst na lewo, a przycisk X maksymalnie na prawo
-        background: '#f9f9f9',        // Twoje tło ramki
-        padding: '10px',              // Odstęp wewnątrz ramki
-        marginBottom: '5px',          // Odstęp między ramkami składników
-        borderRadius: '5px',          // Zaokrąglenie rogów ramki
-        borderLeft: '5px solid #28a745', 
-        width: '100%',                // Sprawia, że ramka zajmuje całą dostępną szerokość
-        boxSizing: 'border-box'       // Pilnuje, by padding nie "rozpychał" ramki poza ekran
-      }}
-    >
-      {/* <span> trzyma tekst składnika, flex: 1 sprawia, że zajmuje on całą wolną przestrzeń po lewej */}
-      <span style={{ flex: 1 }}>{item}</span>
-      
-      {/* Przycisk usuwania (X) */}
       <button 
-        onClick={() => {
-          // filter tworzy nową listę, pomijając ten jeden konkretny element (po jego numerze index)
-          const nowaLista = ingredientsList.filter((_, i) => i !== index);
-          setIngredientsList(nowaLista); // Aktualizuje stan aplikacji nową, krótszą listą
-        }}
-        style={{ 
-          color: 'red',               // Kolor iksa
-          border: 'none',             // Usuwa domyślną ramkę przycisku
-          background: 'none',         // Usuwa tło przycisku
-          cursor: 'pointer',          // Zmienia kursor na "łapkę" po najechaniu
-          fontWeight: 'bold',         // Pogrubia iksa
-          fontSize: '18px',           // Wielkość iksa
-          marginLeft: '10px',         // Odstęp iksa od tekstu składnika
-          lineHeight: '1'             // Zapobiega sztucznemu zwiększaniu wysokości ramki przez przycisk
-        }}
-        title="Usuń ten składnik"      // Tekst, który pojawi się po najechaniu myszką
+        onClick={handleGenerateAI} // Funkcja, która wyśle składniki do AI
+        style={{ width: '100%', padding: '12px', marginTop: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
       >
-        ✕
+        {isLoading ? "AI myśli..." : "Generuj przepis przez AI"}
       </button>
-    </li>
-  ))}
-</ul>
-    {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} {/* To jest warunkowe renderowanie. Jeśli lista jest pusta, pokaż ten tekst. */}
-  </div>
 
-  {/* --- NOWY PRZYCISK AI POD LISTĄ --- */}
-  <button 
-    onClick={handleGenerateAI} // Funkcja, która wyśle składniki do AI i poczeka na przepis
-    style={{ width: '100%', padding: '10px', marginTop: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-  >
-    {isLoading ? "AI myśli..." : "Generuj przepis przez AI"} {/* Zmienia tekst podczas ładowania */}
-  </button>
-
-  {/* --- NOWA SEKCJA WYŚWIETLANIA PRZEPISU --- */}
-  {aiRecipe && ( // NOWE: Pokazuje ten blok tylko jeśli AI zwróciło przepis
-    <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0', borderRadius: '10px', border: '1px solid #ccc' }}>
-      <h3 style={{ color: '#28a745' }}>Przepis AI:</h3>
-      <p style={{ whiteSpace: 'pre-wrap' }}>{aiRecipe}</p> {/* pre-wrap zachowuje entery w tekście */}
+      {aiRecipe && ( // Jeśli AI wygenerowało przepis, to go wyświetlamy w ładnej ramce
+  <div style={{ 
+    marginTop: '20px', 
+    padding: '15px', // przestrzen wewnątrz ramki
+    backgroundColor: '#f0f0f0', 
+    borderRadius: '10px', //zaokrąglone rogi
+    border: '1px solid #ccc', // delikatna ramka
+    textAlign: 'left', //   WYRÓWNANIE DO LEWEJ DLA CAŁEJ RAMKI
+    width: '100%',     //  ROZCIĄGA RAMKĘ NA CAŁĄ SZEROKOŚĆ
+    boxSizing: 'border-box',//  PILNUJE, ŻEBY RAMKA NIE WYCHODZIŁA POZA EKRAN
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+  }}>
+    <div className="prose prose-green"> {/* Jeśli używasz Tailwind, to doda ładne odstępy */}
+      <ReactMarkdown
+        components={{
+          // Tutaj decydujesz, jak mają wyglądać nagłówki (te z hasztagami)
+          h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745', marginBottom: '10px' }} {...props} />, // Nagłówek 1 (h1) będzie większy, zielony i pogrubiony
+          h2: ({node, ...props}) => <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#333', marginTop: '15px' }} {...props} />, // Nagłówek 2 (h2) będzie trochę mniejszy, ciemniejszy i z większym odstępem od góry
+          p: ({node, ...props}) => <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#444' }} {...props} />, // Paragrafy będą miały standardową wielkość, większą interlinię i ciemniejszy kolor dla lepszej czytelności
+          li: ({node, ...props}) => <li style={{ marginBottom: '5px' }} {...props} /> // Każdy punkt listy będzie miał trochę odstępu od dołu, żeby tekst się nie sklejał
+        }}
+      >
+        {aiRecipe} 
+      </ReactMarkdown> 
     </div>
-  )}
   </div>
-  )
+)}
+
+    </div>
+  );
 }
