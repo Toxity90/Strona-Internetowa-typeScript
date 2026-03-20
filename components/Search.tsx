@@ -144,7 +144,7 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
             </li>
           ))}
         </ul>
-        {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>}
+        {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} 
       </div>
 
       <button 
