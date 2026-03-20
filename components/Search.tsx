@@ -1,112 +1,187 @@
 "use client" // Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
+import { Camera } from "lucide-react"; // Import ikonki aparatu
+import { useRef, useState } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś... useState to „inteligentna szufladka”...
+import ReactMarkdown from 'react-markdown'; // Import biblioteki do renderowania Markdown, jeśli chcesz wyświetlać przepisy w formacie Markdown
+export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki.
 
-import { useState } from "react" //Wyciągasz z biblioteki React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
+  // --- TWOJE SZUFLADKI I PILOTY ---
+  const fileInputRef = useRef<HTMLInputElement>(null); // Tworzysz "pilot" do obsługi aparatu, który pozwoli Ci otworzyć menu wyboru zdjęcia...
+  const [ingredient, setIngredient] = useState(""); //Tworzysz zmienną ingredient (tu trafia tekst) i funkcję setIngredient (narzędzie do zmiany tego tekstu).
+  const [ingredientsList, setIngredientsList] = useState<string[]>([]); // Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
+  const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
+  const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
 
-import { getRecipesByIngredient, getRecipesByTag, Recipe } from './data/recipes';// Tylko JEDNA kropka na początku!
+  // --- FUNKCJA DODAWANIA (Uproszczony zapis) ---
+  function handleAdd() { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję".
+    if (ingredient.trim() !== "") { //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
+      setIngredientsList([...ingredientsList, ingredient.trim()]); //Tworzy nową listę, która zawiera wszystko co było wcześniej (...ingredientsList) plus nowy składnik (ingredient.trim())
+      setIngredient(""); //Czyli po dodaniu składnika, czyści pole tekstowe, żebyś mógł wpisać kolejny składnik bez ręcznego kasowania.
+    }
+  }
 
-export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
+  // --- FUNKCJA USUWANIA (Nowa, łatwiejsza do zrozumienia) ---
+  function handleRemove(indexDoUsuniecia: number) {
+    // Tworzymy nową listę bez elementu o danym numerze
+    const nowaLista = ingredientsList.filter((_, i) => i !== indexDoUsuniecia);
+    setIngredientsList(nowaLista); // Aktualizuje stan aplikacji nową, krótszą listą
+  }
 
-  const [ingredient, setIngredient] = useState("") 
- //Tworzysz zmienną ingredient (tu trafia tekst) i funkcję setIngredient (narzędzie do zmiany tego tekstu).
-  // useState to „inteligentna szufladka”, która pozwala Reactowi zapamiętać wpisane dane i automatycznie odświeżyć to, co widzisz na ekranie, gdy ich zawartość się zmieni.
-  // "" oznacza że początkowo pole jest puste
-  const [ingredientsList, setIngredientsList] = useState<string[]>([]) //// Stan dla CAŁEJ LISTY (string[] oznacza tablicę napisów, [] to pusta lista na start)
-
-const [foundRecipes, setFoundRecipes] = useState<Recipe[]>([]); // Tworzymy miejsce na znalezione przepisy
-
-  const handleAdd = () => { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję". Mówisz komputerowi: "Gdy wywołam handleAdd, wykonaj wszystkie kroki wewnątrz tych nawiasów {}
- if  (ingredient.trim() !== ""){ //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
-setIngredientsList([...ingredientsList, ingredient.trim()])
-setIngredient("")
- }
+  const handleCameraClick = () => {
+    fileInputRef.current?.click(); // Po kliknięciu w ikonkę, "klika" w ukryty aparat...
   };
 
-// Lista Twoich kategorii, które pojawią się jako przyciski
-const categories = ["szybki", "duży", "wysokobiałkowy", "na słodko"];
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) { // Ta funkcja jest wywoływana, kiedy użytkownik wybierze zdjęcie. event to informacja o tym, co się stało (w tym przypadku, jakie zdjęcie zostało wybrane).
+    const file = event.target.files?.[0]; //  Pobierasz pierwsze zdjęcie, które użytkownik wybrał (jeśli wybrał). event.target.files to lista wszystkich wybranych plików, a [0] to pierwszy z nich.
+    if (!file) return; // Jeśli użytkownik nie wybrał zdjęcia, to nic nie rób
 
-// Funkcja, która uruchamia się po kliknięciu w przycisk kategorii
-const handleFilterClick = (tag: string) => {
-  const results = getRecipesByTag(tag); // Szukamy przepisów z tym tagiem
-  setFoundRecipes(results); // Wyświetlamy znalezione przepisy na ekranie
-};
+    setIsLoading(true); //  Włączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że coś się dzieje
 
-// Funkcja, która czyści listę znalezionych przepisów
-const handleClear = () => {
-  setFoundRecipes([]); // Ustawia pustą listę, czyli nic nie wyświetla
-};
+    try {
+      const formData = new FormData(); // Tworzymy "paczka danych", która potrafi przechować plik zdjęcia
+      formData.append("file", file); 
+
+      const response = await fetch("/api/vision", { // const response to "koperta", w której przyjdzie odpowiedź z serwera. fetch to narzędzie do wysyłania zapytań do serwera. Wysyłasz je na adres "/api/vision" (to jest Twój własny serwer, który musisz jeszcze stworzyć w folderze /pages/api/vision.ts) i mówisz, że to jest POST (czyli wysyłasz dane) i dołączasz swoją "paczka danych" z plikiem zdjęcia.
+        method: "POST", // Mówisz, że to jest POST (czyli wysyłasz dane)
+        body: formData, 
+      });
+
+      const data = await response.json(); // Czekamy na odpowiedź z serwera i zamieniamy na JSON
+
+      if (data.ingredients) { //  Jeśli serwer odpowiedział, że rozpoznał składniki, to...
+        setIngredientsList([...ingredientsList, ...data.ingredients]);
+        alert("AI rozpoznało: " + data.ingredients.join(", "));
+      }
+    } catch (error) { // Jeśli coś poszło nie tak (np. serwer nie odpowiedział, albo zdjęcie było złej jakości), to...
+      console.error("Błąd przy analizie zdjęcia:", error);
+      alert("Nie udało się odczytać zdjęcia.");
+    } finally {  // Bez względu na to, czy wszystko poszło dobrze, czy źle, zawsze wyłączamy kręciołek/napis "AI myśli", żeby użytkownik wiedział, że proces się zakończył.
+      setIsLoading(false); //  Wyłączamy ładowanie
+    }
+  }
+
+  async function handleGenerateAI() { // NOWE: Funkcja wysyłająca Twoją listę do pliku route.ts
+    if (ingredientsList.length === 0) {
+      alert("Dodaj składniki!");
+      return;
+    }
+    
+    setIsLoading(true); // Włączamy ładowanie
+    try {
+      const response = await fetch("/api/chat", { // Wysyłamy zapytanie do naszego serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
+        method: "POST", 
+        body: JSON.stringify({ ingredients: ingredientsList }), // Wysyłamy listę składników jako JSON do serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
+      });
+      const data = await response.json(); 
+      if (data.success) {
+        setAiRecipe(data.recipe); // Jeśli sukces, zapisujemy przepis
+      }
+    } catch (e) { 
+      console.error(e); 
+    } finally {
+      setIsLoading(false); // Wyłączamy ładowanie
+    }
+  }
 
   return ( // zwracany JSX czyli kod interfejsu, Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
+    <div style={{ maxWidth: '400px', margin: '20px auto', fontFamily: 'sans-serif'}}> 
 
-    <div style={{ maxWidth: '400px', margin: '20px auto', fontFamily: 'sans-serif'}}> {/*Zwykły kontener (taki niewidzialny karton), który trzyma wszystko w kupie. To już jest JSX.*/}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        {/* --- UKRYTY APARAT --- */}
+        <input  // To jest pole do wybierania zdjęć, ale jest ukryte, bo chcemy używać własnego przycisku z ikonką. Ma kilka ważnych atrybutów:
+          type="file" // Mówisz, że to jest pole do wybierania plików
+          accept="image/*" // pozwala wybrać tylko zdjęcia
+          capture="environment" // na telefonach otwiera od razu aparat
+          ref={fileInputRef} // podłączamy ten input do naszego "pilota"
+          onChange={handleFileChange}  // Kiedy użytkownik wybierze zdjęcie, ta funkcja jest wywoływana i zajmuje się wysłaniem go do serwera
+          style={{ display: 'none' }} // Ukrywamy brzydki systemowy przycisk
+        />
 
+        {/* --- PRZYCISK Z IKONKĄ --- */}
+        <button 
+          type="button" 
+          onClick={handleCameraClick}  // Kiedy klikniesz ten przycisk, otworzy się menu wyboru zdjęcia (albo aparat na telefonie)
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+        >
+          <Camera size={28} color="#555" /> 
+        </button>
 
-<div style={{ display: 'flex', gap: '10px'}}>
+        <input  // To jest pole tekstowe, gdzie wpisujesz składnik. Ma kilka ważnych atrybutów:
+          type="text" // Mówisz, że to jest pole tekstowe
+          placeholder="Wpisz składnik" // To jest tekst, który pokazuje się, gdy pole jest puste, żeby podpowiedzieć użytkownikowi co ma wpisać
+          value={ingredient} 
+          onChange={(e) => setIngredient(e.target.value)}  // Kiedy użytkownik coś wpisuje, ta funkcja jest wywoływana i aktualizuje stan ingredient, żeby zawsze mieć aktualny tekst z pola
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { handleAdd(); } // To pozwala dodać składnik do listy, kiedy naciśniesz Enter, zamiast klikać przycisk "Dodaj składnik"
+          }}
+          style={{ padding: '8px', flex: 1, borderRadius: '4px', border: '1px solid #ccc' }} 
+        />
+        
+        <button  // To jest przycisk, który dodaje wpisany składnik do listy. Ma kilka ważnych atrybutów:
+          onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku, która dodaje wpisany składnik do listy
+          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
+        >
+          Dodaj składnik
+        </button>
+      </div>  
+      <div style={{ marginTop: '30px' }}> 
+        <h3>Twoje składniki:</h3>
+        <ul style={{ listStyleType: 'none', padding: 0 }}> 
+          {ingredientsList.map((item, index) => ( // Przechodzimy przez każdy składnik w liście i wyświetlamy go razem z przyciskiem do usunięcia
+            <li key={index} style={{ // Każdy składnik jest wyświetlany w osobnym "pudełku" z przyciskiem do usunięcia
+              display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
+              background: '#f9f9f9', padding: '10px', marginBottom: '5px', borderRadius: '5px', 
+              borderLeft: '5px solid #28a745', width: '100%', boxSizing: 'border-box' 
+            }}>
+              <span style={{ flex: 1 }}>{item}</span> 
+              
+              <button 
+                onClick={() => handleRemove(index)}  // Funkcja handleRemove uruchamiana po kliknięciu przycisku, przekazując numer indeksu składnika do usunięcia
+                style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '18px' }}
+                title="Usuń ten składnik" // informacja po najechaniu myszką
+              >
+                ✕ 
+              </button>
+            </li>
+          ))}
+        </ul>
+        {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} 
+      </div>
 
-{/* Sekcja z przyciskami filtrów */}
-<div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-  {categories.map((cat) => (
-    <button
-      key={cat}
-      onClick={() => handleFilterClick(cat)} // Kliknięcie odpala filtrowanie
-      style={{
-        padding: '10px 15px',
-        backgroundColor: '#eee',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer'
-      }}
-    >
-      {cat} {/* Wyświetla nazwę kategorii na przycisku */}
-    </button>
-  ))}
-</div>
+      <button 
+        onClick={handleGenerateAI} // Funkcja, która wyśle składniki do AI
+        style={{ width: '100%', padding: '12px', marginTop: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+      >
+        {isLoading ? "AI myśli..." : "Generuj przepis przez AI"}
+      </button>
 
-
-      <input //To jest właśnie kod interfejsu (JSX). To, co tu napiszesz, użytkownik zobaczy jako pole do pisania.
-        type="text" // typ pola - tekst
-        placeholder="Wpisz składnik" // tekst podpowiedzi w polu
-        value={ingredient} // wartość pola jest powiązana ze stanem "ingredient"
-        onChange={(e) => setIngredient(e.target.value)} 
-        // funkcja uruchamiana gdy użytkownik coś wpisze
-        // gdy użytkownik naciśnie klawisz, bierze nową literkę (e.target.value) i natychmiast wrzuca ją do szufladki przez setIngredient.
-        style={{ padding: '8px',flex: 1, borderRadius: '4px', border: '1px solid #ccc' }} 
-      />
-<button //Standardowy znacznik przycisku. Tekst pomiędzy nimi to to, co napisane jest na przycisku na ekranie.
-onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku
-style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
->
-  Dodaj składnik
-  <div style={{ marginTop: '20px' }}>
-  {/* Pętla, która bierze znalezione przepisy i robi z nich małe kafelki na ekranie */}
-  {foundRecipes.map(recipe => (
-    <div key={recipe.id} style={{ padding: '10px', border: '1px solid blue', borderRadius: '10px' }}>
-      <h3>{recipe.title}</h3> {/* Wyświetla nazwę dania */}
-      <img src={recipe.image} alt={recipe.title} width="150" /> {/* Wyświetla zdjęcie */}
+      {aiRecipe && ( // Jeśli AI wygenerowało przepis, to go wyświetlamy w ładnej ramce
+  <div style={{ 
+    marginTop: '20px', 
+    padding: '15px', // przestrzen wewnątrz ramki
+    backgroundColor: '#f0f0f0', 
+    borderRadius: '10px', //zaokrąglone rogi
+    border: '1px solid #ccc', // delikatna ramka
+    textAlign: 'left', //   WYRÓWNANIE DO LEWEJ DLA CAŁEJ RAMKI
+    width: '100%',     //  ROZCIĄGA RAMKĘ NA CAŁĄ SZEROKOŚĆ
+    boxSizing: 'border-box',//  PILNUJE, ŻEBY RAMKA NIE WYCHODZIŁA POZA EKRAN
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+  }}>
+    <div className="prose prose-green"> {/* Jeśli używasz Tailwind, to doda ładne odstępy */}
+      <ReactMarkdown
+        components={{
+          // Tutaj decydujesz, jak mają wyglądać nagłówki (te z hasztagami)
+          h1: ({node, ...props}) => <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745', marginBottom: '10px' }} {...props} />, // Nagłówek 1 (h1) będzie większy, zielony i pogrubiony
+          h2: ({node, ...props}) => <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#333', marginTop: '15px' }} {...props} />, // Nagłówek 2 (h2) będzie trochę mniejszy, ciemniejszy i z większym odstępem od góry
+          p: ({node, ...props}) => <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#444' }} {...props} />, // Paragrafy będą miały standardową wielkość, większą interlinię i ciemniejszy kolor dla lepszej czytelności
+          li: ({node, ...props}) => <li style={{ marginBottom: '5px' }} {...props} /> // Każdy punkt listy będzie miał trochę odstępu od dołu, żeby tekst się nie sklejał
+        }}
+      >
+        {aiRecipe} 
+      </ReactMarkdown> 
     </div>
-  ))}
-</div>
-</button>
-
-  </div> {/* zamknięcie kontenera i koniec funckji */}
-
-  <div style={{ marginTop: '30px' }}>
-    <h3>Twoje składniki:</h3>
-    <ul style={{ listStyleType: 'none', padding: 0 }}> {/* ul to znacznik listy punktowej */}
-    
-    {ingredientsList.map((item, index) => ( // map to metoda, która bierze każdy element z ingredientsList i tworzy z niego coś nowego. W tym przypadku, dla każdego składnika (item) tworzy element listy (li).}
-    <li
-    key={index} // klucz to specjalna rzecz, która pomaga Reactowi śledzić elementy listy. Tutaj używamy indexu, ale w prawdziwej aplikacji lepiej byłoby mieć unikalne ID dla każdego składnika.
-    style={{ background: '#f9f9f9', padding: '10px', marginBottom: '5px', borderRadius: '5px', borderLeft: '5px solid #28a745'}}
-    >
-      {item} {/* Tu wyświetla się nazwa składnika, np. "Jajka" */}
-    </li>
-    ))}
-    </ul>
-
-    {ingredientsList.length === 0 && <p>Brak składników. Dodaj coś do listy!</p>} {/* To jest warunkowe renderowanie. Jeśli lista jest pusta, pokaż ten tekst. */}
   </div>
-  </div>
+)}
 
-
-  )
+    </div>
+  );
 }
