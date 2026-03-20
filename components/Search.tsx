@@ -2,7 +2,7 @@
 
 import { useState } from "react" //Wyciągasz z biblioteki React "pudełko na dane", które pozwoli stronie pamiętać, co wpisał użytkownik.
 
-import { getRecipesByIngredient, Recipe } from './data/recipes'; // Tylko JEDNA kropka na początku!
+import { getRecipesByIngredient, getRecipesByTag, Recipe } from './data/recipes';// Tylko JEDNA kropka na początku!
 
 export default function Search() { //Tworzysz główną funkcję (komponent), która buduje Twój element wyszukiwarki. export pozwala użyć go w innych częściach strony.
 
@@ -21,12 +21,45 @@ setIngredient("")
  }
   };
 
+// Lista Twoich kategorii, które pojawią się jako przyciski
+const categories = ["szybki", "duży", "wysokobiałkowy", "na słodko"];
+
+// Funkcja, która uruchamia się po kliknięciu w przycisk kategorii
+const handleFilterClick = (tag: string) => {
+  const results = getRecipesByTag(tag); // Szukamy przepisów z tym tagiem
+  setFoundRecipes(results); // Wyświetlamy znalezione przepisy na ekranie
+};
+
+// Funkcja, która czyści listę znalezionych przepisów
+const handleClear = () => {
+  setFoundRecipes([]); // Ustawia pustą listę, czyli nic nie wyświetla
+};
+
   return ( // zwracany JSX czyli kod interfejsu, Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
 
     <div style={{ maxWidth: '400px', margin: '20px auto', fontFamily: 'sans-serif'}}> {/*Zwykły kontener (taki niewidzialny karton), który trzyma wszystko w kupie. To już jest JSX.*/}
 
 
 <div style={{ display: 'flex', gap: '10px'}}>
+
+{/* Sekcja z przyciskami filtrów */}
+<div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+  {categories.map((cat) => (
+    <button
+      key={cat}
+      onClick={() => handleFilterClick(cat)} // Kliknięcie odpala filtrowanie
+      style={{
+        padding: '10px 15px',
+        backgroundColor: '#eee',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer'
+      }}
+    >
+      {cat} {/* Wyświetla nazwę kategorii na przycisku */}
+    </button>
+  ))}
+</div>
 
 
       <input //To jest właśnie kod interfejsu (JSX). To, co tu napiszesz, użytkownik zobaczy jako pole do pisania.
