@@ -1,5 +1,5 @@
 "use client" // Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
-import { Camera } from "lucide-react"; // Import ikonki aparatu
+import { Camera, X } from "lucide-react"; // Import ikonki aparatu oraz X
 import { useRef, useState } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś... useState to „inteligentna szufladka”...
 import ReactMarkdown from 'react-markdown'; // Import biblioteki do renderowania Markdown, jeśli chcesz wyświetlać przepisy w formacie Markdown
 
@@ -26,6 +26,8 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
     const nowaLista = ingredientsList.filter((_, i) => i !== indexDoUsuniecia);
     setIngredientsList(nowaLista); // Aktualizuje stan aplikacji nową, krótszą listą
   }
+const [recipeImageUrl, setRecipeImageUrl] = useState("");  //const mowi komputerowi, że tworzysz stałe narzędzie do obsługi danych, recipeImageUrl: To nazwa Twojej szufladki. Tu będzie przechowywany adres URL (link) do zdjęcia potrawy, które wygeneruje AI. Na początku jest pusta.setRecipeImageUrl: To „pilot”, którym będziesz wkładać link do tej szufladki. Jak tylko AI stworzy zdjęcie, użyjesz tego pilota, żeby strona „zauważyła” zmianę i wyświetliła obrazek.useState: To funkcja z Reacta, która sprawia, że ta szufladka jest „inteligentna” – gdy tylko jej zawartość się zmieni, strona automatycznie się odświeży (przebuduje), żeby pokazać zdjęcie.(""): To oznacza, że na samym początku (gdy wchodzisz na stronę) szufladka jest pusta (pusty tekst), bo żadne zdjęcie nie zostało jeszcze wygenerowane.
+
 
   const handleCameraClick = () => {
     fileInputRef.current?.click(); // Po kliknięciu w ikonkę, "klika" w ukryty aparat...
@@ -60,7 +62,7 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
     }
   }
 
-  async function handleGenerateAI() { // NOWE: Funkcja wysyłająca Twoją listę do pliku route.ts
+  async function handleGenerateAI() { //  Funkcja wysyłająca  listę do pliku route.ts
     if (ingredientsList.length === 0) {
       alert("Dodaj składniki!");
       return;
@@ -84,20 +86,16 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
   }
 
   return ( // zwracany JSX czyli kod interfejsu, Wszystko, co jest pod tym słowem, zostanie narysowane na ekranie.
-    <div style={{ maxWidth: '1200px', margin: '20px auto', fontFamily: 'sans-serif', padding: '0 20px' }}>  
+    <div style={{ maxWidth: '1300px', margin: '20px auto', fontFamily: 'sans-serif', padding: '0 20px' }}>  {/* Główny kontener strony z maksymalną szerokością i centrowaniem */}
 
       {/* KONTENER dwukolumnowy*/}
       <div style={{ 
-        display: 'flex', 
-        flexDirection: 'row', 
-        flexWrap: 'nowrap', 
-        gap: '40px', 
-        marginTop: '30px',
-        alignItems: 'flex-start' //mówi elementom, żeby trzymały się samej góry, zamiast rozciągać się na całą wysokość lub ustawiać na środku.
-      }}>
+        margin: '0 auto 30px auto',
+        maxWidth: '1500px',
+      }}>  
 
         {/*  LEWA STRONA */}
-        <div style={{ flexShrink: 0, minWidth: '300px' }}>
+        <div style={{ flexShrink: 0, minWidth: '300px' }}>  {/* Lewa kolumna z formularzem wyszukiwania */}
           
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
             {/*  APARAT */}
@@ -117,7 +115,7 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               {/* Camera: To nazwa konkretnego symbolu,size={28}: To wielkość ikonki w pikselach,  */}
-              <Camera size={28} color="#555" /> 
+              <Camera size={28} color="#555" />  
             </button>
 
             <input  // To jest pole tekstowe, gdzie wpisujesz składnik. Ma kilka ważnych atrybutów:
@@ -134,33 +132,43 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
             <button  // To jest przycisk, który dodaje wpisany składnik do listy. Ma kilka ważnych atrybutów:
               onClick={handleAdd} // funkcja handleAdd uruchamiana po kliknięciu przycisku, która dodaje wpisany składnik do listy
               style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
+              
             >
               Dodaj
             </button> 
           </div>
 
-          <h3 style={{ marginBottom: '10px' }}>Twoje składniki:</h3>
-          {ingredientsList.length === 0 && <p style={{ color: '#888' }}>Brak składników. Dodaj coś do listy!</p>} 
+          <h3 style={{ marginBottom: '10px' }}>Twoje składniki:</h3>  
+          {ingredientsList.length === 0 && <p style={{ color: '#888' }}>Brak składników. Dodaj coś do listy!</p>}  {/*} Wyświetla komunikat, jeśli lista jest pusta */}
           
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {ingredientsList.map((item, index) => (
-              <li key={index} style={{ background: '#f0f0f0', margin: '5px 0', padding: '10px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {item}
+          <ul style={{ listStyle: 'none', padding: 0 }}>  
+            {ingredientsList.map((item, index) => (  // Renderuje każdy składnik jako element listy
+              <li key={index} style={{ background: '#f0f0f0', margin: '5px 0', padding: '10px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>  
+                {item}  {/* Wyświetla nazwę składnika */}
                 <button 
-                  onClick={() => handleRemove(index)} 
-                  style={{ color: '#ff4d4f', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-                >
-                  Usuń
-                </button>
+        onClick={() => handleRemove(index)} 
+        title="Usuń składnik" // Tekst, który pokaże się po najechaniu myszką
+        style={{ 
+          color: '#ff4d4f', // Czerwony kolor ikonki
+          border: 'none', 
+          background: 'none', 
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '5px'
+        }}
+      >
+        <X size={20} /> 
+      </button>
               </li>
             ))}
           </ul>
 
           <button 
             onClick={handleGenerateAI}
-            disabled={isLoading}
+            disabled={isLoading}  // Przycisk generujący przepis, wyłączony podczas ładowania
             style={{ 
-              width: '100%', 
+              width: '100%',  
               padding: '15px', 
               marginTop: '20px', 
               backgroundColor: isLoading ? '#6c757d' : '#28a745', 
@@ -171,36 +179,70 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
               cursor: isLoading ? 'not-allowed' : 'pointer' 
             }}
           >
-            {isLoading ? "AI generuje przepis..." : "Generuj przepis przez AI"}
+            {isLoading ? "AI generuje przepis..." : "Generuj przepis przez AI"}  {/* Tekst przycisku zmieniający się w zależności od stanu ładowania*/}
           </button>
+          </div>
 
-          {/* MIEJSCE NA ZDJĘCIE OD AI */}
-          {aiRecipe && (
-            <div style={{ marginTop: '20px', border: '2px dashed #ccc', borderRadius: '8px', height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-              Tu pojawi się zdjęcie gotowej potrawy
-            </div>
-          )}
-        </div>
-        {/* PRAWA STRONA */}
-        {aiRecipe && (
+         {/*  KONTENER DLA WYNIKÓW (TYLKO DLA PRZEPISU I ZDJĘCIA) */}
+         {/* --- ZMIENIAMY TYLKO TĘ SEKCJĘ PONIŻEJ --- */}
+   {/* --- SEKCJA WYNIKÓW: TO TA CZĘŚĆ MA SIĘ ROZJECHAĆ NA BOKI --- */}
+      {aiRecipe && (
+        <div style={{ 
+          display: 'flex',          // display: flex -> TO JEST KLUCZ, stawia elementy obok siebie
+          flexDirection: 'row',     // flexDirection: row -> wymusza układ lewo-prawo
+          gap: '40px',              // gap -> robi 40px przerwy między kartami
+          marginTop: '40px',        // marginTop -> odsuwa sekcję od przycisku
+          alignItems: 'flex-start', // alignItems: flex-start -> obie karty zaczynają się równo od góry
+          width: '100%',            // width: 100% -> rozciąga całą sekcję na szerokość strony
+          justifyContent: 'center'  // Środkuje ten szeroki zestaw na ekranie
+        }}>  
+          
+          {/* LEWA STRONA: PRZEPIS (BARDZO SZEROKI) */}
           <div style={{ 
-            flex: '1', 
-            minWidth: '0', 
-            backgroundColor: '#ffffff', 
-            padding: '25px', 
-            borderRadius: '12px', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            border: '1px solid #eaeaea'
-          }}>
-            {/**/}
-            <div style={{ color: '#444', fontSize: '1.1rem' }}>
-              {/*To narzędzie, które zamienia brzydki tekst od AI na ładną stronę internetową*/}
-              <ReactMarkdown>{aiRecipe}</ReactMarkdown>
+            flex: '3',              // flex: 3 -> mówi: "zabierz 3 razy więcej miejsca niż zdjęcie". To rozciąga przepis w lewo.
+            backgroundColor: '#fff', 
+            padding: '40px',        // padding: 40px -> daje dużo oddechu wewnątrz białej karty
+            borderRadius: '20px',   // Zaokrąglone rogi
+            boxShadow: '0 4px 15px rgba(0,0,0,0.1)', // Cień pod przepisem
+            textAlign: 'left',      // Tekst od lewej strony
+            minWidth: '0'           // minWidth: 0 -> techniczna sprawa, żeby tekst nie wypychał zdjęcia
+          }}>  
+            <div style={{ lineHeight: '1.7', fontSize: '18px' }}>  
+              {/* ReactMarkdown: renderuje Twój tekst od AI w tej szerokiej karcie */}
+              <ReactMarkdown>{aiRecipe}</ReactMarkdown>  
             </div>
           </div>
-        )}
 
-      </div>
-    </div>
-  );
-}
+          {/* PRAWA STRONA: ZDJĘCIE (WĘŻSZE I PRZYKLEJONE) */}
+          <div style={{ 
+            flex: '1',               // flex: 1 -> zdjęcie zajmuje tylko 1 część miejsca
+            minWidth: '350px',       // minWidth: 350px -> pilnuje, żeby zdjęcie nie zrobiło się za małe
+            position: 'sticky',      // position: sticky -> zdjęcie "jedzie" za Tobą przy przewijaniu
+            top: '20px'              // top: 20px -> zatrzymuje się 20px od góry ekranu
+          }}>  
+            <div style={{ 
+              width: '100%', 
+              aspectRatio: '1/1',    // aspectRatio: 1/1 -> wymusza idealny kwadrat
+              backgroundColor: '#f0f0f0', 
+              borderRadius: '20px',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              border: '2px dashed #ccc' 
+            }}>
+              {recipeImageUrl ? (
+                <img src={recipeImageUrl} alt="Danie" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '20px' }} />
+              ) : (
+                <p style={{ color: '#888', textAlign: 'center', padding: '10px' }}>
+                  📸 Tu AI wygeneruje zdjęcie potrawy
+                </p>
+              )}
+            </div>
+          </div>
+
+        </div>
+      )}
+</div>
+    </div> 
+  ); 
+} 
