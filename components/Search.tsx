@@ -12,6 +12,9 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
   const [aiRecipe, setAiRecipe] = useState(""); // NOWE: Pudełko na tekst przepisu, który przyjdzie z GPT-4.1-mini
   const [isLoading, setIsLoading] = useState(false); // NOWE: Stan, który mówi czy AI teraz pracuje (true) czy odpoczywa (false)
 
+const availableTags = ["szybki", "wysokobiałkowy", "wege", "tani", "obiad"]; // Lista dostępnych filtrów do wyboru
+const [selectedTag, setSelectedTag] = useState<string>(""); // Szufladka na wybrany przez Ciebie filtr
+
   // --- FUNKCJA DODAWANIA (Uproszczony zapis) ---
   function handleAdd() { //To jest Twoja własna funkcja. Możesz o niej myśleć jak o "przepisie na akcję".
     if (ingredient.trim() !== "") { //Sprawdza czy nie dodajesz "powietrza" (pustego pola)
@@ -70,7 +73,7 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
     try {
       const response = await fetch("/api/chat", { // Wysyłamy zapytanie do naszego serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
         method: "POST", 
-        body: JSON.stringify({ ingredients: ingredientsList }), // Wysyłamy listę składników jako JSON do serwera, który będzie miał endpoint /api/chat (to też musisz stworzyć w folderze /pages/api/chat.ts)
+        body: JSON.stringify({ ingredients: ingredientsList, tag: selectedTag }), // Wysyłamy listę składników ORAZ wybrany filtr (tag) do serwera
       });
       const data = await response.json(); 
       if (data.success) {
@@ -155,6 +158,31 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
               </li>
             ))}
           </ul>
+
+<div style={{ marginTop: '20px', marginBottom: '10px' }}> {/* Kontener z marginesami, żeby filtry nie dotykały listy ani przycisku */}
+  <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>Wybierz styl dania:</p> {/* Tekst informacyjny nad filtrami */}
+  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}> {/* Układ flex, żeby przyciski stały obok siebie i zawijały się do nowej linii */}
+    {availableTags.map((tag) => ( // Pętla generująca przycisk dla każdego tagu z Twojej listy
+      <button
+        key={tag} // Unikalny identyfikator przycisku dla Reacta
+        onClick={() => setSelectedTag(selectedTag === tag ? "" : tag)} // Funkcja: jeśli klikniesz już wybrany tag, to go odznaczy (pusty string), a jak inny, to go wybierze
+        style={{
+          padding: '6px 12px', // Odstępy wewnątrz przycisku (góra/dół, lewo/prawo)
+          borderRadius: '15px', // Mocno zaokrąglone brzegi, żeby wyglądały jak "pigułki"
+          border: '1px solid #28a745', // Cienka zielona ramka
+          cursor: 'pointer', // Zmiana kursora na rączkę po najechaniu
+          // Warunek: jeśli ten tag jest wybrany, dajemy zielone tło i biały napis. Jeśli nie, białe tło i zielony napis:
+          backgroundColor: selectedTag === tag ? '#28a745' : 'white', 
+          color: selectedTag === tag ? 'white' : '#28a745',
+          fontSize: '0.9rem', // Trochę mniejszy tekst, żeby przyciski były zgrabne
+          transition: '0.2s' // Płynna zmiana kolorów po kliknięciu
+        }}
+      >
+        {tag} {/* Wyświetlenie nazwy filtra na przycisku */}
+      </button>
+    ))}
+  </div>
+</div>
 
           <button 
             onClick={handleGenerateAI}
