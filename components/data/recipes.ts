@@ -11,10 +11,31 @@ export interface Recipe {
 export const recipesDatabase: Recipe[] = [
   {
     id: 1,
-    title: "Szybka Jajecznica", // Nazwa dania
-    ingredients: ["jajka", "masło", "sól"], // Składniki, po których można szukać
-    image: "/images/jajecznica.png", // Nazwa pliku ze zdjęciem (wrzuć go do public/images)
+    title: "Szybka Jajecznica",
+    ingredients: ["jajka", "masło", "sól"],
+    image: "/images/jajecznica.png",
     tags: ["szybki", "wysokobiałkowy"]
+  },
+  {
+    id: 2,
+    title: "Sałatka z ciecierzycy",
+    ingredients: ["ciecierzyca", "pomidor", "ogórek"],
+    image: "/images/salatka.png",
+    tags: ["wege", "szybki", "tani"]
+  },
+  {
+    id: 3,
+    title: "Kurczak z ryżem",
+    ingredients: ["kurczak", "ryż", "brokuły"],
+    image: "/images/kurczak.png",
+    tags: ["wysokobiałkowy", "obiad"]
+  },
+  {
+    id: 4,
+    title: "Makaron z sosem pomidorowym",
+    ingredients: ["makaron", "pomidory", "bazylia"],
+    image: "/images/makaron.png",
+    tags: ["wege", "tani", "obiad"]
   }
 ];
 
@@ -30,4 +51,27 @@ export const getRecipesByIngredient = (name: string): Recipe[] => {
 export const getRecipesByTag = (tag: string): Recipe[] => {
   // Przeszukujemy bazę i sprawdzamy czy przepis ma w swojej liście dany tag
   return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
+};
+
+// Linia 50: Twoja obecna funkcja
+export const getRecipesByTags = (tag: string): Recipe[] => {
+  return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
+}; // Linia 54: Tutaj kończy się stara funkcja
+
+// --- TUTAJ WKLEJASZ (Linia 55) ---
+
+// NOWA FUNKCJA: Łączy szukanie po składnikach i tagach jednocześnie
+export const getFilteredRecipes = (ingredients: string[], tag: string): Recipe[] => {
+  return recipesDatabase.filter(recipe => {
+    // Sprawdzamy, czy przepis zawiera którykolwiek z wpisanych składników (z Twojej listy)
+    const matchesIngredients = ingredients.length === 0 || ingredients.some(ing => 
+      recipe.ingredients.some(recipeIng => recipeIng.toLowerCase().includes(ing.toLowerCase()))
+    );
+
+    // Sprawdzamy, czy przepis ma wybrany przez Ciebie filtr (np. "wege")
+    const matchesTag = tag === "" || recipe.tags.includes(tag);
+
+    // Przepis zostaje wyświetlony tylko jeśli pasuje do składników I do tagu
+    return matchesIngredients && matchesTag;
+  });
 };
