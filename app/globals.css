@@ -10,10 +10,10 @@ body {
 }
 
 main {
-  max-width: 700px;             /* Ogranicza szerokość głównego kontenera do 600 pikseli */
+  max-width: 100%;            
   min-height: 50px;             /* Ogranicza wysokość głównego kontenera do wysokości okna przeglądarki */
-  margin: auto;                 /* Środkuje kontener w poziomie (równe odstępy po lewej i prawej) */
-  text-align: center;  
+  margin: 0;                
+  text-align: left;  
   color: #000000;        
   justify-content: flex-start; /* Wyrównuje tekst, pola i przyciski do środka wewnątrz kontenera */
   min-height: 100vh;            /* Ustawia minimalną wysokość kontenera na 100% wysokości widoku, co sprawia, że zajmuje całe okno przeglądarki */
