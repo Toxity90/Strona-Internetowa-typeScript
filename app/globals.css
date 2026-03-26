@@ -26,11 +26,28 @@ padding-top: 20vh; /* Dodaje górny padding, aby przesunąć zawartość w dół
 
 input {
   padding: 20px;                 /* Dodaje „powietrze” wewnątrz pola tekstowego (pogrubia je) */
-  width: 80%;   
+  width: 300px;   
   color: #000000;                 /* Rozciąga pole tekstowe na 80% szerokości kontenera <main> */
 }
 
 button {
   padding: 10px 20px;            /* Powiększa przycisk (10px góra/dół, 20px lewo/prawo) */
   margin-top: 10px;              /* Robi odstęp od góry, żeby przycisk nie „kleił się” do pola wpisywania */
+  
 }
+
+h1 {
+  width: 600px;
+  text-align: center;
+  margin-left: 625px;
+  font-size: 35px;
+  
+}
+
+h2 {
+ width: 650px;
+  text-align: left;
+}
+
+
+  

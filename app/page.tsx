@@ -10,16 +10,16 @@ export default function Home() { // Tworzysz główną funkcję (komponent) dla 
 
       <Search /> 
       {recipe && (
-        <div className="prose prose-slate mt-6 p-4 bg-[#f8f9fa] border-l-[5px] border-[#28a745]">{/* 6. JEŚLI PRZEPIS JEST DOSTĘPNY (recipe jest niepuste), TO WYŚWIETLASZ GO W DIVIE, z odpowiednimi klasami CSS dla stylizacji */}
-        <article className="prose prose-slate max-w-none text-black font-sans"> {/* 5. JEŚLI PRZEPIS JEST DOSTĘPNY (recipe jest niepuste), TO WYŚWIETLASZ GO W ARTYKULE, z odpowiednimi klasami CSS dla stylizacji */}
+        <div className="prose prose-slate mt-6 p-4 bg-[#f8f9fa] border-l-[5px] border-[#28a745]">{/* 6. JEŚLI PRZEPIS JEST DOSTĘPNY (recipe jest niepuste), TO WYŚWIETLA sie W DIVIE, z odpowiednimi klasami CSS dla stylizacji */}
+        <article className="prose prose-slate max-w-none text-black font-sans"> {/**/} */
           <ReactMarkdown 
           components={{ // 7. USTAWIASZ KOMPONENTY, które będą używane do renderowania różnych elementów Markdown. Tutaj mówisz, że nagłówki (h1, h2, h3) mają być renderowane jako <h2> z określonymi klasami CSS.}}
-          p: ({node, ...props}) => <p className="m-0 mb-4 text-left" {...props} />,
-        ul: ({node, ...props}) => <ul className="m-0 mb-4 pl-4 text-left" {...props} />,
-        li: ({node, ...props}) => <li className="m-0 text-left" {...props} />,
-        h1: ({node, ...props}) => <h1 className="m-0 mb-2 text-left text-xl font-bold" {...props} />,
-        h2: ({node, ...props}) => <h2 className="m-0 mb-2 text-left text-lg font-bold" {...props} />,
-        h3: ({node, ...props}) => <h3 className="m-0 mb-2 text-left text-md font-bold" {...props} />,
+          p: ({node, ...props}) => <p className="m-0 mb-4 text-left" {...props} />, //
+        ul: ({node, ...props}) => <ul className="m-0 mb-4 pl-4 text-left" {...props} />, //
+        li: ({node, ...props}) => <li className="m-0 text-left" {...props} />, //
+        h1: ({node, ...props}) => <h1 className="m-0 mb-2 text-left text-xl font-bold" {...props} />, //
+        h2: ({node, ...props}) => <h2 className="m-0 mb-2 text-left text-lg font-bold" {...props} />, //
+        h3: ({node, ...props}) => <h3 className="m-0 mb-2 text-left text-md font-bold" {...props} />, //
           }}
           >
             {recipe} 

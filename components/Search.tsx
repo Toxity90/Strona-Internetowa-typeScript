@@ -96,10 +96,17 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
       style={{ 
         width: '100%',
         margin: '20px 0',
-        padding: '0 20px' // Ustawia wewnętrzny odstęp kontenera: 0 pikseli na górze i dole, 20 pikseli po lewej i prawej stronie
+        padding: '0 20px', // Ustawia wewnętrzny odstęp kontenera: 0 pikseli na górze i dole, 20 pikseli po lewej i prawej stronie
+        
       }}
     >
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}> {/*Tworzy kontener flexbox z odstępem 10px między elementami i marginesem dolnym 20px*/}
+      <div style={{
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '20px',
+        justifyContent: 'center',
+        alignItems: 'center',
+ }}> {/*Tworzy kontener flexbox z odstępem 10px między elementami i marginesem dolnym 20px*/}
 
         {/*  APARAT */}
         <input  // To jest pole do wybierania zdjęć, ale jest ukryte, bo chcemy używać własnego przycisku z ikonką. Ma kilka ważnych atrybutów:
@@ -112,40 +119,76 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
           style={{ display: 'none' }} // Ukrywa brzydki systemowy przycisk
 
         />
+        {/* IKONka*/}
+        <div style={{
+          display: 'flex', // flex dla łatwego wyrównania
+          justifyContent: 'center', // wyśrodkowanie w poziomie
+          marginBottom: '10px', // odstęp od inputa
+        }}>
 
-        {/* --- PRZYCISK Z IKONKĄ --- */}
+        {/* PRZYCISK */}
         <button
           type="button"
-          onClick={handleCameraClick}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          onClick={handleCameraClick} // funkcja wywoływana po kliknięciu, otwiera wybór zdjęcia
+          style={{
+          background: 'none',  // usuwa tło przycisku, żeby była widoczna tylko ikonka
+          border: 'none',  // usuwa obramowanie przycisku
+          cursor: 'pointer', // zmienia kursor na wskazujący, gdy najedziesz na ikonę
+        }}
+          
+          
         >
-          <Camera size={28} color="#555" />
+          <Camera size={40} color="#555" />
         </button>
-
+</div>
         <input
           type="text" // Pole tekstowe do wpisywania składnika
           placeholder="Wpisz składnik"
-          value={ingredient} //
-          onChange={(e) => setIngredient(e.target.value)}
-          onKeyDown={(e) => {
+          value={ingredient}  // aktualna wartość inputa ze stanu
+          onChange={(e) => setIngredient(e.target.value)} // aktualizuje stan podczas wpisywania( czyli że za każdym razem, gdy użytkownik wpisuje lub usuwa znak w polu tekstowym, aktualizowana jest zmienna ingredient, tak żeby React „znał” aktualną zawartość inputa)
+          onKeyDown={(e) => { 
             if (e.key === "Enter") { handleAdd(); } // Po naciśnięciu Enter dodaje składnik
           }}
-          style={{ padding: '8px', flex: 1, borderRadius: '4px', border: '1px solid #ccc' }}
+          style={{
+            padding: '20px', // zwiększa obszar wewnętrzny pola (większe pole)
+            borderRadius: '4px',// zaokrąglenie rogów pola
+            border: '1px solid #ccc', // obramowanie pola
+            width: '450px', // szerokość pola
+            
+               }}
         />
 
         <button
           onClick={handleAdd} // Przycisk do dodania składnika do listy
-          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}
+          style={{
+             padding: '12px 24px', // większy przycisk (więcej miejsca w pionie i poziomie)
+              cursor: 'pointer', // zmiana kursora po najechaniu
+               backgroundColor: '#0070f3', // kolor tła przycisku
+                color: 'white',
+                 border: 'none', // brak obramowania
+                  borderRadius: '4px',
+                  fontSize: '1rem', //weiksz aczcionka
+                 }}
         >
           Dodaj
         </button>
       </div>
 
-      <h3 style={{ marginBottom: '10px' }}>Twoje składniki:</h3>
+      <h3 style={{ 
+        marginBottom: '10px',  // odstęp od elementów poniżej
+        textAlign: 'center',  // wyśrodkowanie tekstu
+        fontSize: '22px',  // powiększenie napisu
+       }}>Twoje składniki:</h3>
 
-      {ingredientsList.length === 0 && <p style={{ color: '#888' }}>Brak składników. Dodaj coś do listy!</p>} {/*Wyświetla komunikat, jeśli lista składników jest pusta*/}
+      {ingredientsList.length === 0 && (
+        <p style={{ color: '#888', textAlign: 'center', width: '100%' }}>Brak składników. Dodaj coś do listy!</p>)} {/*Wyświetla komunikat, jeśli lista składników jest pusta*/}
 
-      <ul style={{ listStyle: 'none', padding: 0 }}> {/*Lista nieuporządkowana bez punktów i paddingu*/}
+      <ul style={{ 
+        listStyle: 'none',  // usuwa kropki z listy
+         padding: 0,  // usuwa wewnętrzne odstępy
+         maxWidth: '500px', // ogranicza szerokość listy (żeby nie była na całą stronę)
+         margin: '0 auto' //  centruje listę w poziomie
+          }}> 
         {ingredientsList.map((item, index) => (
           <li key={index} style={{ background: '#f0f0f0', margin: '5px 0', padding: '10px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}> 
             {item} {/*Wyświetla nazwę składnika*/}
@@ -169,8 +212,20 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
       </ul>
 
       <div style={{ marginTop: '20px', marginBottom: '10px' }}> 
-        <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>Wybierz styl dania:</p> {/*Nagłówek dla wyboru tagu*/}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}> {/*Kontener flex dla przycisków tagów z zawijaniem*/}
+        <p style={{ 
+        fontWeight: 'bold',
+        marginBottom: '8px',
+        marginLeft: '815px',
+        fontSize: '20px',
+        }}>Wybierz styl dania:</p> {/*Nagłówek dla wyboru tagu*/}
+
+        <div style={{
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        
+              }}> {/*Kontener flex dla przycisków tagów z zawijaniem*/}
           {availableTags.map((tag) => ( // Mapuje dostępne tagi na przyciski
             <button
               key={tag} // Unikalny klucz dla każdego przycisku
@@ -196,18 +251,19 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
         onClick={handleGenerateAI} // Główny przycisk do generowania przepisu przez AI
         disabled={isLoading} // Wyłącza przycisk podczas ładowania
         style={{
-          width: '100%',
-          padding: '15px',
-          marginTop: '20px',
-          backgroundColor: isLoading ? '#6c757d' : '#28a745',
+          width: '300px', // ustawia stałą, mniejszą szerokość przycisku
+          padding: '15px', // powiększa przycisk (wewnętrzne odstępy)
+          margin: '20px auto 0 auto', // 20px od góry + auto po bokach = wyśrodkowanie
+          display: 'block', // pozwala działać margin auto (centrowanie)
+          backgroundColor: isLoading ? '#6c757d' : '#28a745', // zmienia kolor gdy ładuje
           color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontWeight: 'bold',
-          cursor: isLoading ? 'not-allowed' : 'pointer'
+          border: 'none',   // usuwa obramowanie
+          borderRadius: '4px', // zaokrągla rogi
+          fontWeight: 'bold', // pogrubia tekst
+          cursor: isLoading ? 'not-allowed' : 'pointer' // zmienia kursor zależnie od stanu
         }}
       >
-        {isLoading ? "AI generuje przepis..." : "Generuj przepis przez AI"}
+        {isLoading ? "AI generuje przepis..." : "Generuj przepis przez AI"} 
       </button>
 
       {aiRecipe && (
@@ -231,7 +287,12 @@ export default function Search() { //Tworzysz główną funkcję (komponent), kt
             boxSizing: 'border-box',
           }}> {/*Lewa strona: kontener na przepis z białym tłem i cieniem*/}
             <div style={{ lineHeight: '1.7', fontSize: '18px' }}> {/*Stylizacja tekstu przepisu z większym odstępem linii*/}
-              <ReactMarkdown>{aiRecipe}</ReactMarkdown> {/*Renderuje treść przepisu w formacie Markdown*/}
+              <ReactMarkdown
+              components={{
+                h1: ({node, ...props}) => <h2 {...props} />, // zamienia wszystkie h1 z AI na h2
+              }}
+              >
+                {aiRecipe}</ReactMarkdown> {/*Renderuje treść przepisu w formacie Markdown*/}
             </div>
           </div> 
           {/* PRAWA STRONA: ZDJĘCIE */}
