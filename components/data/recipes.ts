@@ -38,39 +38,41 @@ export const recipesDatabase: Recipe[] = [
     tags: ["wege", "tani", "obiad"]
   }
 ];
-
-// Funkcja, która przeszukuje bazę po wpisanym słowie
-export const getRecipesByIngredient = (name: string): Recipe[] => {
-  // Filtrujemy bazę przepisów
-  return recipesDatabase.filter(recipe => 
-    // Sprawdzamy, czy którykolwiek składnik (ing) zawiera wpisany tekst (name)
-    recipe.ingredients.some(ing => ing.toLowerCase().includes(name.toLowerCase())))
-  };
-
-//  funkcja do filtrowania po kategoriach (tagach)
+// Eksportuje stałą funkcję, która przyjmuje nazwę składnika (string) i zwraca tablicę obiektów typu Recipe.
+export const getRecipesByIngredient = (name: string): Recipe[] => { 
+  // Przeszukuje tablicę recipesDatabase, tworząc nową listę tylko z pasującymi elementami.
+  return recipesDatabase.filter((recipe) => {
+    // Sprawdza, czy przynajmniej jeden składnik w danym przepisie spełnia poniższy warunek.
+    return recipe.ingredients.some((ing) =>
+      // Sprawdza, czy składnik zawiera szukaną frazę, ignorując wielkość liter.
+      ing.toLowerCase().includes(name.toLowerCase())
+    );
+  });
+};
+// Eksportuje funkcję filtrującą przepisy na podstawie konkretnego tagu (kategorii).
 export const getRecipesByTag = (tag: string): Recipe[] => {
-  // Przeszukujemy bazę i sprawdzamy czy przepis ma w swojej liście dany tag
+  // Zwraca przepisy, których tablica tagów zawiera dokładnie taki sam ciąg znaków jak podany tag.
   return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
 };
 
-// Linia 50: Twoja obecna funkcja
-export const getRecipesByTags = (tag: string): Recipe[] => {
-  return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
-}; // Linia 54: Tutaj kończy się stara funkcja
-
-
-// FUNKCJA: Łączy szukanie po składnikach i tagach jednocześnie
+// Eksportuje zaawansowaną funkcję filtrującą jednocześnie po liście składników oraz tagu.
 export const getFilteredRecipes = (ingredients: string[], tag: string): Recipe[] => {
+  // Rozpoczyna proces filtrowania bazy danych przepisów.
   return recipesDatabase.filter(recipe => {
-    // Sprawdzamy, czy przepis zawiera którykolwiek z wpisanych składników (z Twojej listy)
-    const matchesIngredients = ingredients.length === 0 || ingredients.some(ing => 
-      recipe.ingredients.some(recipeIng => recipeIng.toLowerCase().includes(ing.toLowerCase()))
-    );
+    // Sprawdza, czy lista szukanych składników jest pusta LUB czy przepis zawiera choć jeden z nich.
+    const matchesIngredients =
+      ingredients.length === 0 ||
+      ingredients.some(ing =>
+        // Głębokie przeszukiwanie: czy którykolwiek składnik przepisu zawiera szukaną frazę (bez względu na wielkość liter).
+        recipe.ingredients.some(recipeIng =>
+          recipeIng.toLowerCase().includes(ing.toLowerCase())
+        )
+      );
 
-    // Sprawdzamy, czy przepis ma wybrany przez Ciebie filtr (np. "wege")
+    // Sprawdza, czy parametr tag jest pusty LUB czy dany przepis posiada ten konkretny tag.
     const matchesTag = tag === "" || recipe.tags.includes(tag);
 
-    // Przepis zostaje wyświetlony tylko jeśli pasuje do składników I do tagu
+    // Zwraca przepis tylko wtedy, gdy spełnia on jednocześnie warunek składników i warunek tagu.
     return matchesIngredients && matchesTag;
   });
 };
