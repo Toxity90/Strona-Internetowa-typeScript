@@ -1,6 +1,4 @@
-"use client"
-
-// Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
+"use client" // oznacza, że dany komponent Reacta powinien być renderowany i wykonywany po stronie klienta (w przeglądarce), a nie na serwerze. Mówisz Next.js: "Ten plik ma reagować na kliknięcia i wpisywanie tekstu w przeglądarce użytkownika". Bez tego strona byłaby statyczna jak gazeta.
 import { Camera, X } from "lucide-react"; // Import ikonki aparatu oraz X
 import { useRef, useState } from "react"; // useRef to narzędzie, które pozwala Ci "zapamiętać" coś... useState to „inteligentna szufladka”...
 import ReactMarkdown from 'react-markdown'; // Import biblioteki do renderowania Markdown, jeśli chcesz wyświetlać przepisy w formacie Markdown

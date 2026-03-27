@@ -44,10 +44,10 @@ export const getRecipesByIngredient = (name: string): Recipe[] => {
   // Filtrujemy bazę przepisów
   return recipesDatabase.filter(recipe => 
     // Sprawdzamy, czy którykolwiek składnik (ing) zawiera wpisany tekst (name)
-    recipe.ingredients.some(ing => ing.toLowerCase().includes(name.toLowerCase()))
+    recipe.ingredients.some(ing => ing.toLowerCase().includes(name.toLowerCase())))
   };
 
-// Nowa funkcja do filtrowania po kategoriach (tagach)
+//  funkcja do filtrowania po kategoriach (tagach)
 export const getRecipesByTag = (tag: string): Recipe[] => {
   // Przeszukujemy bazę i sprawdzamy czy przepis ma w swojej liście dany tag
   return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
@@ -58,9 +58,8 @@ export const getRecipesByTags = (tag: string): Recipe[] => {
   return recipesDatabase.filter(recipe => recipe.tags.includes(tag));
 }; // Linia 54: Tutaj kończy się stara funkcja
 
-// --- TUTAJ WKLEJASZ (Linia 55) ---
 
-// NOWA FUNKCJA: Łączy szukanie po składnikach i tagach jednocześnie
+// FUNKCJA: Łączy szukanie po składnikach i tagach jednocześnie
 export const getFilteredRecipes = (ingredients: string[], tag: string): Recipe[] => {
   return recipesDatabase.filter(recipe => {
     // Sprawdzamy, czy przepis zawiera którykolwiek z wpisanych składników (z Twojej listy)
