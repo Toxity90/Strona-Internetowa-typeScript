@@ -47,7 +47,7 @@ export const getRecipesByIngredient = (name: string): Recipe[] => {
       // Sprawdza, czy składnik zawiera szukaną frazę, ignorując wielkość liter.
       ing.toLowerCase().includes(name.toLowerCase())
     );
-  });
+  }); 
 };
 // Eksportuje funkcję filtrującą przepisy na podstawie konkretnego tagu (kategorii).
 export const getRecipesByTag = (tag: string): Recipe[] => {
