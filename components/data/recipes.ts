@@ -38,17 +38,13 @@ export const recipesDatabase: Recipe[] = [
     tags: ["wege", "tani", "obiad"]
   }
 ];
-// Eksportuje stałą funkcję, która przyjmuje nazwę składnika (string) i zwraca tablicę obiektów typu Recipe.
-export const getRecipesByIngredient = (name: string): Recipe[] => { 
-  // Przeszukuje tablicę recipesDatabase, tworząc nową listę tylko z pasującymi elementami.
-  return recipesDatabase.filter((recipe) => {
-    // Sprawdza, czy przynajmniej jeden składnik w danym przepisie spełnia poniższy warunek.
-    return recipe.ingredients.some((ing) =>
-      // Sprawdza, czy składnik zawiera szukaną frazę, ignorując wielkość liter.
-      ing.toLowerCase().includes(name.toLowerCase())
-    );
-  }); 
-};
+export const getRecipesByIngredient = (name: string): Recipe[] => { // funkcja zwraca przepisy pasujące do składnika
+  return recipesDatabase.filter((recipe) => { // filtruje całą bazę przepisów
+    return recipe.ingredients.some((ing) => // sprawdza czy chociaż jeden składnik pasuje
+      ing.toLowerCase().includes(name.toLowerCase()) // porównanie bez wielkości liter
+    ); // kończy some()
+  }); // kończy filter()
+}; // kończy funkcję
 // Eksportuje funkcję filtrującą przepisy na podstawie konkretnego tagu (kategorii).
 export const getRecipesByTag = (tag: string): Recipe[] => {
   // Zwraca przepisy, których tablica tagów zawiera dokładnie taki sam ciąg znaków jak podany tag.
